@@ -4,6 +4,7 @@ import REBA.body_part_reba_calculator.Degree_to_REBA.leg_reba_score as REBA_leg
 import REBA.body_part_reba_calculator.Degree_to_REBA.upperarm_reba_score as REBA_UA
 import REBA.body_part_reba_calculator.Degree_to_REBA.lowerarm_reba_score as REBA_LA
 import REBA.body_part_reba_calculator.Degree_to_REBA.wrist_reba_score as REBA_wrist
+import REBA.body_part_reba_calculator.Degree_to_REBA.partial_REBA_to_total_REBA as REBA
 
 
 def make_sample():
@@ -79,6 +80,13 @@ def make_sample():
                                 m_wrist = REBA_wrist.WristREBA([i, j,k,l,m,n])
                                 wrist_sample.append([i, j,k,l,m,n, m_wrist.wrist_reba_score()])
 
+        # m_REBA = REBA.partial_to_total_REBA([neck_sample[0][len(neck_sample[0])-1],
+        #                                      trunk_sample[0][len(trunk_sample[0])-1],
+        #                                      leg_sample[0][len(leg_sample[0])-1],
+        #                                      UA_sample[0][len(UA_sample[0])-1],
+        #                                      LA_sample[0][len(LA_sample[0])-1],
+        #                                      wrist_sample[0][len(wrist_sample[0])-1]])
+        # print(m_REBA.find_total_REBA())
 
 if __name__ == "__main__":
     # for i in range(1, 9, 2):
