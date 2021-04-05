@@ -4,7 +4,7 @@ import REBA.body_part_reba_calculator.Degree_to_REBA.leg_reba_score as REBA_leg
 import REBA.body_part_reba_calculator.Degree_to_REBA.upperarm_reba_score as REBA_UA
 import REBA.body_part_reba_calculator.Degree_to_REBA.lowerarm_reba_score as REBA_LA
 import REBA.body_part_reba_calculator.Degree_to_REBA.wrist_reba_score as REBA_wrist
-import REBA.body_part_reba_calculator.Degree_to_REBA.partial_REBA_to_total_REBA as REBA
+import REBA.body_part_reba_calculator.partial_REBA_to_total_REBA as REBA
 
 
 def make_sample():
