@@ -24,4 +24,4 @@ class LegREBA:
             if 60 <= left_leg_degree:
                 leg_reba_score = leg_reba_score + 2
 
-        return [leg_reba_score]
+        return leg_reba_score

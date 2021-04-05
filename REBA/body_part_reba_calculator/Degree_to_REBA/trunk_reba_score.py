@@ -48,4 +48,4 @@ class TrunkREBA:
             trunk_reba_score += 1
             trunk_torsion_score += 1
 
-        return [trunk_reba_score, trunk_flex_score, trunk_side_score, trunk_torsion_score]
+        return trunk_reba_score

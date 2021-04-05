@@ -62,4 +62,4 @@ class UAREBA:
             if right_shoulder_rise > 90 or left_shoulder_rise > 90:
                 upper_arm_reba_score += 1
                 upper_arm_shoulder_rise += 1
-        return [upper_arm_reba_score, upper_arm_flex_score, upper_arm_side_score, upper_arm_shoulder_rise]
+        return upper_arm_reba_score

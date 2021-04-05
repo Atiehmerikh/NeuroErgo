@@ -41,4 +41,4 @@ class WristREBA:
             wrist_torsion_score +=1
             wrist_reba_score += 1
 
-        return [wrist_reba_score, wrist_flex_score, wrist_side_bend_score, wrist_torsion_score]
+        return wrist_reba_score
