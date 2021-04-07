@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import REBA.body_part_reba_calculator.partial_REBA_to_total_REBA as REBA
+
 
 class Dataset:
     def __init__(self, angle):
@@ -43,9 +45,9 @@ class Dataset:
 
         return sample_degrees
 
-    def REBA_of_samples(self, samples_array):
-        REBA_score = REBA(samples_array)
-        return REBA_score
+    # def REBA_of_samples(self, samples_array):
+    #
+    #     return REBA_score
 
     def store_data(self, samples_array, REBA):
         data = {'neck_flexion': [samples_array[0]],

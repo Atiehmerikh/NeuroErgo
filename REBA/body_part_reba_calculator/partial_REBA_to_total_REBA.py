@@ -60,9 +60,6 @@ class partial_to_total_REBA:
         if self.REBA_partial_scores[5]>3:
             self.REBA_partial_scores[5] = 3
 
-
-
-
         posture_score_a = table_a[self.REBA_partial_scores[0]-1][self.REBA_partial_scores[1]-1][self.REBA_partial_scores[2]-1]
 
         load = 0
