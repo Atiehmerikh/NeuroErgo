@@ -50,9 +50,8 @@ def neck_learning_model():
             for j in neck_side_flexion_samples:
                 for k in neck_rotation_samples:
                     m_neck =REBA_neck.NeckREBA([i,j,k])
-                    m_neck_reba_score = m_neck.neck_reba_score()
                     X_train[counter, :] = [i,j,k]
-                    y_train[counter] = m_neck_reba_score
+                    y_train[counter] = m_neck.neck_reba_score()
             model.fit(X_train, y_train, verbose=0)
 
     model.save('./data/neck_DNN.model')
@@ -80,26 +79,66 @@ def neck_model_test():
 
     return (abs_sum, len(neck_flexion_extension_samples) * len(neck_side_flexion_samples) * len(neck_rotation_samples))
 
-# neck_flexion_extension_samples = [-55,-15, -3, 1, 3, 18, 23, 29]
-# neck_side_flexion_samples = [-52,-13, -7, 3, 19, 46, 50]
-# neck_rotation_samples = [-57,-32, -13, -1, 2, 5, 11, 30, 58]
-# neck_sample_test = []
-# for i in neck_flexion_extension_samples:
-#     for j in neck_side_flexion_samples:
-#         for k in neck_rotation_samples:
-#             m_neck =REBA_neck.NeckREBA([i,j,k])
-#             neck_sample_test.append([i,j,k,m_neck.neck_reba_score()])
-
 # trunk
-trunk_flexion_extension_samples = [-30,0,20,60, 70]
-trunk_side_flexion_samples = [-40,0, 40]
-trunk_rotation_samples = [-35,0, 35]
-trunk_sample = []
-for i in trunk_flexion_extension_samples:
-    for j in trunk_side_flexion_samples:
-        for k in trunk_rotation_samples:
-            m_trunk =REBA_trunk.TrunkREBA([i,j,k])
-            trunk_sample.append([i,j,k,m_trunk.trunk_reba_score()])
+def trunk_ranges():
+    trunk_flexion_extension_samples = range(-30, 71)
+    trunk_side_flexion_samples = range(-40, 41)
+    trunk_rotation_samples = range(-35, 36)
+
+    return trunk_flexion_extension_samples, trunk_side_flexion_samples, trunk_rotation_samples
+
+def trunk_learning_model():
+
+    activation = 'tanh'
+    model = Sequential()
+    model.add(Dense(3, input_dim=3, activation=activation))
+    model.add(Dense(3, activation=activation))
+    model.add(Dense(3, activation=activation))
+    model.add(Dense(3, activation=activation))
+    model.add(Dense(3, activation=activation))
+    model.add(Dense(3, activation=activation))
+    model.add(Dense(3, activation=activation))
+    model.add(Dense(1))
+    model.compile(optimizer=SGD(lr=0.01), loss='mse')
+
+    trunk_flexion_extension_samples, trunk_side_flexion_samples, trunk_rotation_samples = trunk_ranges()
+
+    for e in tqdm(range(40)):
+        for i in trunk_flexion_extension_samples:
+            num_of_data = len(trunk_side_flexion_samples) * len(trunk_rotation_samples)
+            X_train = np.zeros(shape=(num_of_data, 3))
+            y_train = np.zeros(shape=(num_of_data,))
+            counter = 0
+            for j in trunk_side_flexion_samples:
+                for k in trunk_rotation_samples:
+                    m_trunk = REBA_trunk.TrunkREBA([i,j,k])
+                    X_train[counter, :] = [i,j,k]
+                    y_train[counter] = m_trunk.trunk_reba_score()
+            model.fit(X_train, y_train, verbose=1)
+
+    model.save('./data/trunk_DNN.model')
+
+def trunk_model_test():
+    trunk_flexion_extension_samples, trunk_side_flexion_samples, trunk_rotation_samples = trunk_ranges()
+    model = load_model('./data/trunk_DNN.model')
+
+    abs_sum = 0
+    for i in tqdm(trunk_flexion_extension_samples):
+        num_of_data = len(trunk_side_flexion_samples) * len(trunk_rotation_samples)
+        X_train = np.zeros(shape=(num_of_data, 3))
+        y_train = np.zeros(shape=(num_of_data,))
+        counter = 0
+        for j in trunk_side_flexion_samples:
+            for k in trunk_rotation_samples:
+                m_trunk = REBA_trunk.TrunkREBA([i,j,k])
+                X_train[counter, :] = [i,j,k]
+                y_train[counter] = m_trunk.trunk_reba_score()
+
+        pred = model.predict(X_train)
+        for y_true, y_pred in zip(y_train, pred):
+            abs_sum += math.fabs(y_true - y_pred)
+
+    return (abs_sum, len(trunk_flexion_extension_samples) * len(trunk_side_flexion_samples) * len(trunk_rotation_samples))
 
 # Legs
 legs_flexion_samples = [0,30,60,150]
@@ -165,6 +204,8 @@ for i in right_wrist_flexion_extension_samples:
 np.random.seed(42)
 #neck_learning_model()
 print(neck_model_test())
+#trunk_learning_model()
+print(trunk_model_test())
 
 
 
