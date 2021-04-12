@@ -162,24 +162,48 @@ def leg_learning_model():
     model.add(Dense(1, input_dim=1, activation=activation))
     model.add(Dense(1, activation=activation))
     model.add(Dense(1, activation=activation))
+    model.add(Dense(1, activation=activation))
+    model.add(Dense(1, activation=activation))
+    model.add(Dense(1, activation=activation))
+    model.add(Dense(1, activation=activation))
     model.add(Dense(1))
     model.compile(optimizer=SGD(lr=0.01), loss='mse')
 
     legs_flexion_samples = leg_ranges()
     
-    for e in tqdm(range(40)):
+    for e in tqdm(range(100)):
         num_of_data = len(legs_flexion_samples)
-        X_train = np.zeros(shape=(num_of_data, 3))
+        X_train = np.zeros(shape=(num_of_data, 1))
         y_train = np.zeros(shape=(num_of_data,))
         counter = 0
         for i in legs_flexion_samples:    
             m_leg = REBA_leg.LegREBA([i,i])
-            X_train[counter, :] = [i,j,k]
+            X_train[counter, :] = [i]
             y_train[counter] = m_leg.leg_reba_score()
-        model.fit(X_train, y_train, verbose=1)
+            counter += 1
+        model.fit(X_train, y_train, verbose=0)
 
     model.save('./data/leg_DNN.model')
 
+def leg_model_test():
+    legs_flexion_samples = leg_ranges()
+    model = load_model('./data/leg_DNN.model')
+
+    num_of_data = len(legs_flexion_samples)
+    X_train = np.zeros(shape=(num_of_data, 1))
+    y_train = np.zeros(shape=(num_of_data,))
+    counter = 0
+    abs_sum = 0
+    for i in legs_flexion_samples:    
+        m_leg = REBA_leg.LegREBA([i,i])
+        X_train[counter, :] = [i]
+        y_train[counter] = m_leg.leg_reba_score()
+        counter += 1
+
+    pred = model.predict(X_train)
+    for y_true, y_pred in zip(y_train, pred):
+        abs_sum += math.fabs(y_true - y_pred)
+    return (abs_sum, len(legs_flexion_samples))
 # leg_sample = []
 # for i in legs_flexion_samples:
 #     m_leg = REBA_leg.LegREBA([i,i])
@@ -242,10 +266,7 @@ for i in right_wrist_flexion_extension_samples:
 np.random.seed(42)
 #neck_learning_model()
 #print(neck_model_test())
-trunk_learning_model()
-print(trunk_model_test())
-#leg_learning_model()
-
-
-
-    
+#trunk_learning_model()
+#print(trunk_model_test())
+leg_learning_model()
+print(leg_model_test())
