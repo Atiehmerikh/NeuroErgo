@@ -41,7 +41,7 @@ def neck_learning_model():
     model.compile(optimizer=SGD(lr=0.01), loss='mse')
 
     neck_flexion_extension_samples, neck_side_flexion_samples, neck_rotation_samples = neck_ranges()
-    for e in tqdm(range(20)):
+    for e in tqdm(range(60)):
         for i in neck_flexion_extension_samples:
             num_of_data = len(neck_side_flexion_samples) * len(neck_rotation_samples)
             X_train = np.zeros(shape=(num_of_data, 3))
@@ -52,6 +52,7 @@ def neck_learning_model():
                     m_neck =REBA_neck.NeckREBA([i,j,k])
                     X_train[counter, :] = [i,j,k]
                     y_train[counter] = m_neck.neck_reba_score()
+                    counter +=1
             model.fit(X_train, y_train, verbose=0)
 
     model.save('./data/neck_DNN.model')
@@ -72,6 +73,7 @@ def neck_model_test():
                 m_neck_reba_score = m_neck.neck_reba_score()
                 X_train[counter, :] = [i,j,k]
                 y_train[counter] = m_neck_reba_score
+                counter += 1
 
         pred = model.predict(X_train)
         for y_true, y_pred in zip(y_train, pred):
@@ -89,21 +91,28 @@ def trunk_ranges():
 
 def trunk_learning_model():
 
-    activation = 'tanh'
+    activation = 'relu'
     model = Sequential()
     model.add(Dense(3, input_dim=3, activation=activation))
     model.add(Dense(3, activation=activation))
     model.add(Dense(3, activation=activation))
     model.add(Dense(3, activation=activation))
+    # model.add(Dense(6, activation=activation))
+    # model.add(Dense(9, activation=activation))
+    # model.add(Dense(12, activation=activation))
+    # model.add(Dense(9, activation=activation))
+    # model.add(Dense(6, activation=activation))
+    # model.add(Dense(3, activation=activation))
+    model.add(Dense(3, activation=activation))
     model.add(Dense(3, activation=activation))
     model.add(Dense(3, activation=activation))
     model.add(Dense(3, activation=activation))
     model.add(Dense(1))
-    model.compile(optimizer=SGD(lr=0.01), loss='mse')
+    model.compile(optimizer=Adam(lr=0.00001), loss='mse')
 
     trunk_flexion_extension_samples, trunk_side_flexion_samples, trunk_rotation_samples = trunk_ranges()
 
-    for e in tqdm(range(40)):
+    for e in tqdm(range(400)):
         for i in trunk_flexion_extension_samples:
             num_of_data = len(trunk_side_flexion_samples) * len(trunk_rotation_samples)
             X_train = np.zeros(shape=(num_of_data, 3))
@@ -114,7 +123,8 @@ def trunk_learning_model():
                     m_trunk = REBA_trunk.TrunkREBA([i,j,k])
                     X_train[counter, :] = [i,j,k]
                     y_train[counter] = m_trunk.trunk_reba_score()
-            model.fit(X_train, y_train, verbose=1)
+                    counter += 1
+            model.fit(X_train, y_train, verbose=0)
 
     model.save('./data/trunk_DNN.model')
 
@@ -133,6 +143,7 @@ def trunk_model_test():
                 m_trunk = REBA_trunk.TrunkREBA([i,j,k])
                 X_train[counter, :] = [i,j,k]
                 y_train[counter] = m_trunk.trunk_reba_score()
+                counter += 1
 
         pred = model.predict(X_train)
         for y_true, y_pred in zip(y_train, pred):
@@ -141,11 +152,38 @@ def trunk_model_test():
     return (abs_sum, len(trunk_flexion_extension_samples) * len(trunk_side_flexion_samples) * len(trunk_rotation_samples))
 
 # Legs
-legs_flexion_samples = [0,30,60,150]
-leg_sample = []
-for i in legs_flexion_samples:
-    m_leg = REBA_leg.LegREBA([i,i])
-    leg_sample.append([i, m_leg.leg_reba_score()])
+def leg_ranges():
+    legs_flexion_samples = range(0, 151)
+    return legs_flexion_samples
+
+def leg_learning_model():
+    activation = 'tanh'
+    model = Sequential()
+    model.add(Dense(1, input_dim=1, activation=activation))
+    model.add(Dense(1, activation=activation))
+    model.add(Dense(1, activation=activation))
+    model.add(Dense(1))
+    model.compile(optimizer=SGD(lr=0.01), loss='mse')
+
+    legs_flexion_samples = leg_ranges()
+    
+    for e in tqdm(range(40)):
+        num_of_data = len(legs_flexion_samples)
+        X_train = np.zeros(shape=(num_of_data, 3))
+        y_train = np.zeros(shape=(num_of_data,))
+        counter = 0
+        for i in legs_flexion_samples:    
+            m_leg = REBA_leg.LegREBA([i,i])
+            X_train[counter, :] = [i,j,k]
+            y_train[counter] = m_leg.leg_reba_score()
+        model.fit(X_train, y_train, verbose=1)
+
+    model.save('./data/leg_DNN.model')
+
+# leg_sample = []
+# for i in legs_flexion_samples:
+#     m_leg = REBA_leg.LegREBA([i,i])
+#     leg_sample.append([i, m_leg.leg_reba_score()])
 
 # Upper Arm
 right_upper_arm_flexion_extension_samples = [-47,-20,0,20,45,90, 170]
@@ -203,9 +241,10 @@ for i in right_wrist_flexion_extension_samples:
 
 np.random.seed(42)
 #neck_learning_model()
-print(neck_model_test())
-#trunk_learning_model()
+#print(neck_model_test())
+trunk_learning_model()
 print(trunk_model_test())
+#leg_learning_model()
 
 
 
