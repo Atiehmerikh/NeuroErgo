@@ -204,28 +204,91 @@ def leg_model_test():
     for y_true, y_pred in zip(y_train, pred):
         abs_sum += math.fabs(y_true - y_pred)
     return (abs_sum, len(legs_flexion_samples))
-# leg_sample = []
-# for i in legs_flexion_samples:
-#     m_leg = REBA_leg.LegREBA([i,i])
-#     leg_sample.append([i, m_leg.leg_reba_score()])
 
+
+def upper_arm_ranges():
+    right_upper_arm_flexion_extension_samples = [-47, -46] + [*range(-45, 171, 5)]
+    left_upper_arm_flexion_extension_samples = [-47, -46] + [*range(-45, 171, 5)]
+    right_upper_arm_adduction_abduction_samples = [-2, -1] + [*range(0, 201, 10)]
+    left_upper_arm_adduction_abduction_samples = [-2, -1] + [*range(0, 201, 10)]
+    right_shoulder_raise_samples = [*range(0, 31, 6)]
+    left_shoulder_raise_samples = [*range(0, 31, 6)]
+    return right_upper_arm_flexion_extension_samples, left_upper_arm_flexion_extension_samples, \
+           right_upper_arm_adduction_abduction_samples, left_upper_arm_adduction_abduction_samples, \
+           right_shoulder_raise_samples, left_shoulder_raise_samples
 # Upper Arm
-right_upper_arm_flexion_extension_samples = [-47,-20,0,20,45,90, 170]
-left_upper_arm_flexion_extension_samples = [-47, -20, 0, 20, 45, 90, 170]
-right_upper_arm_adduction_abduction_samples = [-2,0, 200]
-left_upper_arm_adduction_abduction_samples = [-2,0, 200]
-right_shoulder_raise_samples = [0, 30]
-left_shoulder_raise_samples = [0, 30]
-UA_sample = []
-for i in right_upper_arm_flexion_extension_samples:
-    for j in left_upper_arm_flexion_extension_samples:
-        for k in right_upper_arm_adduction_abduction_samples:
-            for l in left_upper_arm_adduction_abduction_samples:
-                for m in right_shoulder_raise_samples:
-                    for n in left_shoulder_raise_samples:
-                        m_UA = REBA_UA.UAREBA([i, j,k,l,m,n])
-                        UA_sample.append([i, j, k,l,m,n,m_UA.upper_arm_reba_score()])
+def upper_arm_learning_model():
+    activation = 'tanh'
+    model = Sequential()
+    model.add(Dense(6, input_dim=6, activation=activation))
+    model.add(Dense(6, activation=activation))
+    model.add(Dense(6, activation=activation))
+    model.add(Dense(6, activation=activation))
+    model.add(Dense(5, activation=activation))
+    model.add(Dense(5, activation=activation))
+    model.add(Dense(4, activation=activation))
+    model.add(Dense(4, activation=activation))
+    model.add(Dense(3, activation=activation))
+    model.add(Dense(3, activation=activation))
+    model.add(Dense(2, activation=activation))
+    model.add(Dense(2, activation=activation))
+    model.add(Dense(1))
+    model.compile(optimizer=SGD(lr=0.001), loss='mse')
 
+    right_upper_arm_flexion_extension_samples , left_upper_arm_flexion_extension_samples, \
+    right_upper_arm_adduction_abduction_samples, left_upper_arm_adduction_abduction_samples, \
+    right_shoulder_raise_samples, left_shoulder_raise_samples  = upper_arm_ranges()
+
+    for e in tqdm(range(40)):
+        for i in right_upper_arm_flexion_extension_samples:
+            for j in left_upper_arm_flexion_extension_samples:
+                num_of_data = len(right_upper_arm_adduction_abduction_samples) * len(left_upper_arm_adduction_abduction_samples) *\
+                            len(right_shoulder_raise_samples) * len(left_shoulder_raise_samples)
+                X_train = np.zeros(shape=(num_of_data, 6))
+                y_train = np.zeros(shape=(num_of_data,))
+                counter = 0
+                for k in right_upper_arm_adduction_abduction_samples:
+                    for l in left_upper_arm_adduction_abduction_samples:
+                        for m in right_shoulder_raise_samples:
+                            for n in left_shoulder_raise_samples:
+                                m_UA = REBA_UA.UAREBA([i, j,k,l,m,n])
+                                X_train[counter, :] = [i, j,k,l,m,n]
+                                y_train[counter] = m_UA.upper_arm_reba_score()
+                                counter += 1
+                model.fit(X_train, y_train, verbose=0)
+
+    model.save('./data/upper_arm_DNN.model')
+
+def upper_arm_model_test():
+    right_upper_arm_flexion_extension_samples , left_upper_arm_flexion_extension_samples, \
+    right_upper_arm_adduction_abduction_samples, left_upper_arm_adduction_abduction_samples, \
+    right_shoulder_raise_samples, left_shoulder_raise_samples  = upper_arm_ranges()
+
+    model = load_model('./data/upper_arm_DNN.model')
+
+    abs_sum = 0
+    for i in right_upper_arm_flexion_extension_samples:
+        for j in left_upper_arm_flexion_extension_samples:
+            num_of_data = len(right_upper_arm_adduction_abduction_samples) * len(left_upper_arm_adduction_abduction_samples) *\
+                          len(right_shoulder_raise_samples) * len(left_shoulder_raise_samples)
+            X_train = np.zeros(shape=(num_of_data, 6))
+            y_train = np.zeros(shape=(num_of_data,))
+            counter = 0
+            for k in right_upper_arm_adduction_abduction_samples:
+                for l in left_upper_arm_adduction_abduction_samples:
+                    for m in right_shoulder_raise_samples:
+                        for n in left_shoulder_raise_samples:
+                            m_UA = REBA_UA.UAREBA([i, j,k,l,m,n])
+                            X_train[counter, :] = [i, j,k,l,m,n]
+                            y_train[counter] = m_UA.upper_arm_reba_score()
+                            counter += 1
+
+            pred = model.predict(X_train)
+            for y_true, y_pred in zip(y_train, pred):
+                abs_sum += math.fabs(y_true - y_pred)
+    return (abs_sum, len(right_upper_arm_flexion_extension_samples) * len(left_upper_arm_flexion_extension_samples) * \
+                     len(right_upper_arm_adduction_abduction_samples) * len(left_upper_arm_adduction_abduction_samples) *\
+                     len(right_shoulder_raise_samples) * len(left_shoulder_raise_samples))
 # Lower Arm
 right_lower_arm_flexion_samples = [0,60,100, 150]
 left_lower_arm_flexion_samples = [0,60,100, 150]
@@ -268,5 +331,7 @@ np.random.seed(42)
 #print(neck_model_test())
 #trunk_learning_model()
 #print(trunk_model_test())
-leg_learning_model()
-print(leg_model_test())
+#leg_learning_model()
+#print(leg_model_test())
+#upper_arm_learning_model()
+print(upper_arm_model_test())
