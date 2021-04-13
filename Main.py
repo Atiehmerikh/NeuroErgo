@@ -205,7 +205,7 @@ def leg_model_test():
         abs_sum += math.fabs(y_true - y_pred)
     return (abs_sum, len(legs_flexion_samples))
 
-
+# Upper Arm
 def upper_arm_ranges():
     right_upper_arm_flexion_extension_samples = [-47, -46] + [*range(-45, 171, 5)]
     left_upper_arm_flexion_extension_samples = [-47, -46] + [*range(-45, 171, 5)]
@@ -216,7 +216,7 @@ def upper_arm_ranges():
     return right_upper_arm_flexion_extension_samples, left_upper_arm_flexion_extension_samples, \
            right_upper_arm_adduction_abduction_samples, left_upper_arm_adduction_abduction_samples, \
            right_shoulder_raise_samples, left_shoulder_raise_samples
-# Upper Arm
+
 def upper_arm_learning_model():
     activation = 'tanh'
     model = Sequential()
@@ -289,14 +289,72 @@ def upper_arm_model_test():
     return (abs_sum, len(right_upper_arm_flexion_extension_samples) * len(left_upper_arm_flexion_extension_samples) * \
                      len(right_upper_arm_adduction_abduction_samples) * len(left_upper_arm_adduction_abduction_samples) *\
                      len(right_shoulder_raise_samples) * len(left_shoulder_raise_samples))
+
+
 # Lower Arm
-right_lower_arm_flexion_samples = [0,60,100, 150]
-left_lower_arm_flexion_samples = [0,60,100, 150]
-LA_sample =[]
-for i in right_lower_arm_flexion_samples:
-    for j in left_lower_arm_flexion_samples:
-        m_LA = REBA_LA.LAREBA([i,j])
-        LA_sample.append([i,j,m_LA.lower_arm_score()])
+def lower_arm_ranges():
+    right_lower_arm_flexion_samples = range(0, 151)
+    left_lower_arm_flexion_samples = range(0,151)
+    return right_lower_arm_flexion_samples, left_lower_arm_flexion_samples
+
+def lower_arm_learning_model():
+    activation = 'tanh'
+    model = Sequential()
+    model.add(Dense(2, input_dim=2, activation=activation))
+    model.add(Dense(2, activation=activation))
+    model.add(Dense(2, activation=activation))
+    model.add(Dense(2, activation=activation))
+    model.add(Dense(2, activation=activation))
+    model.add(Dense(2, activation=activation))
+    model.add(Dense(2, activation=activation))
+    model.add(Dense(2, activation=activation))
+    model.add(Dense(2, activation=activation))
+    model.add(Dense(1))
+    model.compile(optimizer=Nadam(lr=0.001), loss='mse')
+
+    right_lower_arm_flexion_samples, left_lower_arm_flexion_samples = lower_arm_ranges()
+    for e in tqdm(range(100)):
+        num_of_data = len(right_lower_arm_flexion_samples) * len(left_lower_arm_flexion_samples)
+        X_train = np.zeros(shape=(num_of_data, 2))
+        y_train = np.zeros(shape=(num_of_data,))
+        counter = 0
+        for i in right_lower_arm_flexion_samples:
+            for j in left_lower_arm_flexion_samples:
+                m_LA = REBA_LA.LAREBA([i,j])
+                X_train[counter, :] = [i, j]
+                y_train[counter] = m_LA.lower_arm_score()
+                counter += 1
+
+        model.fit(X_train, y_train, verbose=0)
+
+    model.save('./data/lower_arm_DNN.model')
+
+def lower_arm_model_test():
+    right_lower_arm_flexion_samples, left_lower_arm_flexion_samples = lower_arm_ranges()
+    model = load_model('./data/lower_arm_DNN.model')
+    num_of_data = len(right_lower_arm_flexion_samples) * len(left_lower_arm_flexion_samples)
+    X_train = np.zeros(shape=(num_of_data, 2))
+    y_train = np.zeros(shape=(num_of_data,))
+    counter = 0
+    
+    for i in right_lower_arm_flexion_samples:
+        for j in left_lower_arm_flexion_samples:
+            m_LA = REBA_LA.LAREBA([i,j])
+            X_train[counter, :] = [i, j]
+            y_train[counter] = m_LA.lower_arm_score()
+            counter += 1
+    pred = model.predict(X_train)
+
+    abs_sum = 0
+    for y_true, y_pred in zip(y_train, pred):
+        abs_sum += math.fabs(y_true - y_pred)
+    
+    return (abs_sum, num_of_data)
+# LA_sample =[]
+# for i in right_lower_arm_flexion_samples:
+#     for j in left_lower_arm_flexion_samples:
+#         m_LA = REBA_LA.LAREBA([i,j])
+#         LA_sample.append([i,j,m_LA.lower_arm_score()])
 
 # Wrist
 right_wrist_flexion_extension_samples = [-53,-15,15, 47]
@@ -334,4 +392,6 @@ np.random.seed(42)
 #leg_learning_model()
 #print(leg_model_test())
 #upper_arm_learning_model()
-print(upper_arm_model_test())
+#print(upper_arm_model_test())
+lower_arm_learning_model()
+print(lower_arm_model_test())
