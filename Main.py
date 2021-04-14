@@ -357,22 +357,90 @@ def lower_arm_model_test():
 #         LA_sample.append([i,j,m_LA.lower_arm_score()])
 
 # Wrist
-right_wrist_flexion_extension_samples = [-53,-15,15, 47]
-left_wrist_flexion_extension_samples = [-53,-15,15, 47]
-right_wrist_side_adduction_abduction_samples = [-40,0, 30]
-left_wrist_side_adduction_abduction_samples = [-40,0, 30]
-right_wrist_rotation_samples = [-90,0, 90]
-left_wrist_rotation_samples = [-90,0, 90]
-wrist_sample = []
-for i in right_wrist_flexion_extension_samples:
-    for j in left_wrist_flexion_extension_samples:
-        for k in right_wrist_side_adduction_abduction_samples:
-            for l in left_wrist_side_adduction_abduction_samples:
-                for m in right_wrist_rotation_samples:
-                    for n in left_wrist_rotation_samples:
-                        m_wrist = REBA_wrist.WristREBA([i, j,k,l,m,n])
-                        wrist_sample.append([i, j,k,l,m,n, m_wrist.wrist_reba_score()])
+def wrist_ranges():
+    right_wrist_flexion_extension_samples = [-53,  47] + [*range(-45, 46, 9)]
+    left_wrist_flexion_extension_samples =  [-53,  47] + [*range(-45, 46, 9)]
+    right_wrist_side_adduction_abduction_samples = range(-40, 31, 10)
+    left_wrist_side_adduction_abduction_samples = range(-40, 31, 10)
+    right_wrist_rotation_samples = range(-90, 91, 10)
+    left_wrist_rotation_samples = range(-90, 91, 10)
+    return right_wrist_flexion_extension_samples, left_wrist_flexion_extension_samples, \
+    right_wrist_side_adduction_abduction_samples, left_wrist_side_adduction_abduction_samples, \
+    right_wrist_rotation_samples, left_wrist_rotation_samples
 
+def wrist_learning_model():
+    activation = 'tanh'
+    model = Sequential()
+    model.add(Dense(6, input_dim=6, activation=activation))
+    model.add(Dense(6, activation=activation))
+    model.add(Dense(6, activation=activation))
+    model.add(Dense(6, activation=activation))
+    model.add(Dense(5, activation=activation))
+    model.add(Dense(5, activation=activation))
+    model.add(Dense(4, activation=activation))
+    model.add(Dense(4, activation=activation))
+    model.add(Dense(3, activation=activation))
+    model.add(Dense(3, activation=activation))
+    model.add(Dense(2, activation=activation))
+    model.add(Dense(2, activation=activation))
+    model.add(Dense(1))
+    model.compile(optimizer=SGD(lr=0.001), loss='mse')
+
+    right_wrist_flexion_extension_samples, left_wrist_flexion_extension_samples, \
+    right_wrist_side_adduction_abduction_samples, left_wrist_side_adduction_abduction_samples, \
+    right_wrist_rotation_samples, left_wrist_rotation_samples = wrist_ranges()
+
+    for e in tqdm(range(40)):
+        for i in right_wrist_flexion_extension_samples:
+            for j in left_wrist_flexion_extension_samples:
+                num_of_data = len(right_wrist_side_adduction_abduction_samples) * len(left_wrist_side_adduction_abduction_samples) *\
+                            len(right_wrist_rotation_samples) * len(left_wrist_rotation_samples)
+                X_train = np.zeros(shape=(num_of_data, 6))
+                y_train = np.zeros(shape=(num_of_data,))
+                counter = 0
+                for k in right_wrist_side_adduction_abduction_samples:
+                    for l in left_wrist_side_adduction_abduction_samples:
+                        for m in right_wrist_rotation_samples:
+                            for n in left_wrist_rotation_samples:
+                                m_wrist = REBA_wrist.WristREBA([i, j,k,l,m,n])
+                                X_train[counter, :] = [i, j,k,l,m,n]
+                                y_train[counter] = m_wrist.wrist_reba_score()
+                                counter += 1
+                model.fit(X_train, y_train, verbose=0)
+
+    model.save('./data/wrist_DNN.model')
+
+def wrist_model_test():
+    right_wrist_flexion_extension_samples, left_wrist_flexion_extension_samples, \
+    right_wrist_side_adduction_abduction_samples, left_wrist_side_adduction_abduction_samples, \
+    right_wrist_rotation_samples, left_wrist_rotation_samples = wrist_ranges()
+
+    model = load_model('./data/wrist_DNN.model')
+    abs_sum = 0
+    for i in right_wrist_flexion_extension_samples:
+            for j in left_wrist_flexion_extension_samples:
+                num_of_data = len(right_wrist_side_adduction_abduction_samples) * len(left_wrist_side_adduction_abduction_samples) *\
+                            len(right_wrist_rotation_samples) * len(left_wrist_rotation_samples)
+                X_train = np.zeros(shape=(num_of_data, 6))
+                y_train = np.zeros(shape=(num_of_data,))
+                counter = 0
+                for k in right_wrist_side_adduction_abduction_samples:
+                    for l in left_wrist_side_adduction_abduction_samples:
+                        for m in right_wrist_rotation_samples:
+                            for n in left_wrist_rotation_samples:
+                                m_wrist = REBA_wrist.WristREBA([i, j,k,l,m,n])
+                                X_train[counter, :] = [i, j,k,l,m,n]
+                                y_train[counter] = m_wrist.wrist_reba_score()
+                                counter += 1
+                pred = model.predict(X_train)
+
+    
+                for y_true, y_pred in zip(y_train, pred):
+                    abs_sum += math.fabs(y_true - y_pred)
+    
+    return (abs_sum, len(right_wrist_flexion_extension_samples) * len(left_wrist_flexion_extension_samples) * \
+                     len(right_wrist_side_adduction_abduction_samples) * len(left_wrist_side_adduction_abduction_samples) *\
+                     len(right_wrist_rotation_samples) * len(left_wrist_rotation_samples))
 # m_REBA = REBA.partial_to_total_REBA([neck_sample[0][len(neck_sample[0])-1],
 #                                      trunk_sample[0][len(trunk_sample[0])-1],
 #                                      leg_sample[0][len(leg_sample[0])-1],
@@ -393,5 +461,7 @@ np.random.seed(42)
 #print(leg_model_test())
 #upper_arm_learning_model()
 #print(upper_arm_model_test())
-lower_arm_learning_model()
-print(lower_arm_model_test())
+#lower_arm_learning_model()
+#print(lower_arm_model_test())
+#wrist_learning_model()
+#print(wrist_model_test())
