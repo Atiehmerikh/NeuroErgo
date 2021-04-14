@@ -434,20 +434,91 @@ def wrist_model_test():
                                 counter += 1
                 pred = model.predict(X_train)
 
-    
                 for y_true, y_pred in zip(y_train, pred):
                     abs_sum += math.fabs(y_true - y_pred)
     
     return (abs_sum, len(right_wrist_flexion_extension_samples) * len(left_wrist_flexion_extension_samples) * \
                      len(right_wrist_side_adduction_abduction_samples) * len(left_wrist_side_adduction_abduction_samples) *\
                      len(right_wrist_rotation_samples) * len(left_wrist_rotation_samples))
-# m_REBA = REBA.partial_to_total_REBA([neck_sample[0][len(neck_sample[0])-1],
-#                                      trunk_sample[0][len(trunk_sample[0])-1],
-#                                      leg_sample[0][len(leg_sample[0])-1],
-#                                      UA_sample[0][len(UA_sample[0])-1],
-#                                      LA_sample[0][len(LA_sample[0])-1],
-#                                      wrist_sample[0][len(wrist_sample[0])-1]])
+
+
+def total_reba_from_partial_ranges():
+    neck = [1,2,3]
+    trunk = [1,2,3,4,5]
+    leg = [1,2,3,4]
+    upper_arm = [1,2,3,4,5,6]
+    lower_arm = [1,2]
+    wrist = [1,2,3]
+    return (neck, trunk, leg, upper_arm, lower_arm, wrist)
+
+def total_reba_from_partial_learning_model():
+    activation = 'tanh'
+    model = Sequential()
+    model.add(Dense(6, input_dim=6, activation=activation))
+    # model.add(Dense(6, activation=activation))
+    model.add(Dense(5, activation=activation))
+    model.add(Dense(4, activation=activation))
+    model.add(Dense(3, activation=activation))
+    model.add(Dense(2, activation=activation))
+    model.add(Dense(1))
+    model.compile(optimizer=SGD(lr=0.001), loss='mse')
+
+    neck, trunk, leg, upper_arm, lower_arm, wrist = total_reba_from_partial_ranges()
+
+    for e in tqdm(range(300)):
+        num_of_data = len(neck) * len(trunk) * len(leg) * len(upper_arm) * len(lower_arm) * len(wrist)
+        X_train = np.zeros(shape=(num_of_data, 6))
+        y_train = np.zeros(shape=(num_of_data,))
+        counter = 0
+        for i in neck:
+            for j in trunk:
+                for k in leg:
+                    for l in upper_arm:
+                        for m in lower_arm:
+                            for n in wrist:
+                                m_REBA = REBA.partial_to_total_REBA([i,j,k,l,m,n])
+                                X_train[counter, :] = [i, j,k,l,m,n]
+                                y_train[counter] = m_REBA.find_total_REBA()
+                                counter += 1
+
+        model.fit(X_train, y_train, verbose=0)
+
+    model.save('./data/total_reba_from_partial_DNN.model')
+
+def total_reba_from_partial_model_test():
+    neck, trunk, leg, upper_arm, lower_arm, wrist = total_reba_from_partial_ranges()
+    model = load_model('./data/total_reba_from_partial_DNN.model')
+    abs_sum = 0
+    num_of_data = len(neck) * len(trunk) * len(leg) * len(upper_arm) * len(lower_arm) * len(wrist)
+    X_train = np.zeros(shape=(num_of_data, 6))
+    y_train = np.zeros(shape=(num_of_data,))
+    counter = 0
+    for i in neck:
+        for j in trunk:
+            for k in leg:
+                for l in upper_arm:
+                    for m in lower_arm:
+                        for n in wrist:
+                            m_REBA = REBA.partial_to_total_REBA([i,j,k,l,m,n])
+                            X_train[counter, :] = [i, j,k,l,m,n]
+                            y_train[counter] = m_REBA.find_total_REBA()
+                            counter += 1
+
+    pred = model.predict(X_train)
+
+    for y_true, y_pred in zip(y_train, pred):
+        abs_sum += math.fabs(y_true - y_pred)
+
+    return(abs_sum, num_of_data)
+# m_REBA = REBA.partial_to_total_REBA([neck_sample[0][len(neck_sample[0])-1],     1,2,3
+#                                      trunk_sample[0][len(trunk_sample[0])-1],   1,2,3,4,5
+#                                      leg_sample[0][len(leg_sample[0])-1],       1 -- 4
+#                                      UA_sample[0][len(UA_sample[0])-1],         1 -- 6
+#                                      LA_sample[0][len(LA_sample[0])-1],         1,2
+#                                      wrist_sample[0][len(wrist_sample[0])-1]])  1,2,3
 # print(m_REBA.find_total_REBA())
+
+
 
 
 
@@ -465,3 +536,5 @@ np.random.seed(42)
 #print(lower_arm_model_test())
 #wrist_learning_model()
 #print(wrist_model_test())
+total_reba_from_partial_learning_model()
+print(total_reba_from_partial_model_test())
