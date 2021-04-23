@@ -7,10 +7,12 @@ import REBA.body_part_reba_calculator.Degree_to_REBA.wrist_reba_score as REBA_wr
 import REBA.body_part_reba_calculator.partial_REBA_to_total_REBA as REBA
 
 import numpy as np
+from itertools import product
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.layers import Dense, Dropout, Concatenate, concatenate
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.optimizers import Adam, RMSprop, Nadam, Adamax, Adadelta, Adagrad, SGD
+from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l1, l2
 from tensorflow.keras import initializers
 from tensorflow.keras.layers import Activation
@@ -29,7 +31,7 @@ def neck_ranges():
 def neck_learning_model():
     activation = 'tanh'
     model = Sequential()
-    model.add(Dense(3, input_dim=3, activation=activation))
+    model.add(Dense(3, input_dim=3, activation=activation, name = "neck_model"))
     model.add(Dense(3, activation=activation))
     model.add(Dense(3, activation=activation))
     model.add(Dense(3, activation=activation))
@@ -97,7 +99,7 @@ def trunk_ranges():
 def trunk_learning_model():
     activation = 'relu'
     model = Sequential()
-    model.add(Dense(3, input_dim=3, activation=activation))
+    model.add(Dense(3, input_dim=3, activation=activation, name = "trunk_model"))
     model.add(Dense(3, activation=activation))
     model.add(Dense(3, activation=activation))
     model.add(Dense(3, activation=activation))
@@ -162,7 +164,7 @@ def leg_ranges():
 def leg_learning_model():
     activation = 'tanh'
     model = Sequential()
-    model.add(Dense(1, input_dim=1, activation=activation))
+    model.add(Dense(1, input_dim=1, activation=activation, name = "leg_model"))
     model.add(Dense(1, activation=activation))
     model.add(Dense(1, activation=activation))
     model.add(Dense(1, activation=activation))
@@ -215,8 +217,8 @@ def leg_model_test():
 
 # Upper Arm
 def upper_arm_ranges():
-    right_upper_arm_flexion_extension_samples = [-47, -46] + [*range(-45, 171, 5)]
-    left_upper_arm_flexion_extension_samples = [-47, -46] + [*range(-45, 171, 5)]
+    right_upper_arm_flexion_extension_samples = [-47, 165, 170] + [*range(-45, 171, 9)]
+    left_upper_arm_flexion_extension_samples = [-47, 165, 170] + [*range(-45, 171, 9)]
     right_upper_arm_adduction_abduction_samples = [-2, -1] + [*range(0, 201, 10)]
     left_upper_arm_adduction_abduction_samples = [-2, -1] + [*range(0, 201, 10)]
     right_shoulder_raise_samples = [*range(0, 31, 6)]
@@ -228,7 +230,7 @@ def upper_arm_ranges():
 def upper_arm_learning_model():
     activation = 'tanh'
     model = Sequential()
-    model.add(Dense(6, input_dim=6, activation=activation))
+    model.add(Dense(6, input_dim=6, activation=activation, name = "upper_arm_model"))
     model.add(Dense(6, activation=activation))
     model.add(Dense(6, activation=activation))
     model.add(Dense(6, activation=activation))
@@ -313,7 +315,7 @@ def lower_arm_ranges():
 def lower_arm_learning_model():
     activation = 'tanh'
     model = Sequential()
-    model.add(Dense(2, input_dim=2, activation=activation))
+    model.add(Dense(2, input_dim=2, activation=activation, name = "lower_arm_model"))
     model.add(Dense(2, activation=activation))
     model.add(Dense(2, activation=activation))
     model.add(Dense(2, activation=activation))
@@ -384,7 +386,7 @@ def wrist_ranges():
 def wrist_learning_model():
     activation = 'tanh'
     model = Sequential()
-    model.add(Dense(6, input_dim=6, activation=activation))
+    model.add(Dense(6, input_dim=6, activation=activation, name = "wrist_model"))
     model.add(Dense(6, activation=activation))
     model.add(Dense(6, activation=activation))
     model.add(Dense(6, activation=activation))
@@ -572,38 +574,131 @@ def neuro_REBA (neck_vector, trunk_vector, leg_vector, upper_arm_vector, lower_a
                                                   neuro_wrist_REBA(wrist_vector)]]))[0][0]
 
 
-print(neuro_REBA([-50, -50, 10], [-10, -20, 30], [20], [10, 10, 10, 10, 10, 10], [50, 50], [10, 10, 10, 10, 10, 10]))
+# print(neuro_REBA([-50, -50, 10], [-10, -20, 30], [20], [10, 10, 10, 10, 10, 10], [50, 50], [10, 10, 10, 10, 10, 10]))
 
-m  = REBA.partial_to_total_REBA([REBA_neck.NeckREBA([-50, -50, 10]).neck_reba_score(),
-                            REBA_trunk.TrunkREBA([-10, -20, 30]).trunk_reba_score(),
-                            REBA_leg.LegREBA([20,20]).leg_reba_score(),
-                            REBA_UA.UAREBA([10, 10, 10, 10, 10, 10]).upper_arm_reba_score(),
-                            REBA_LA.LAREBA([50,50]).lower_arm_score(),
-                            REBA_wrist.WristREBA([10, 10, 10, 10, 10, 10]).wrist_reba_score()]).find_total_REBA()
+# m  = REBA.partial_to_total_REBA([REBA_neck.NeckREBA([-50, -50, 10]).neck_reba_score(),
+#                             REBA_trunk.TrunkREBA([-10, -20, 30]).trunk_reba_score(),
+#                             REBA_leg.LegREBA([20,20]).leg_reba_score(),
+#                             REBA_UA.UAREBA([10, 10, 10, 10, 10, 10]).upper_arm_reba_score(),
+#                             REBA_LA.LAREBA([50,50]).lower_arm_score(),
+#                             REBA_wrist.WristREBA([10, 10, 10, 10, 10, 10]).wrist_reba_score()]).find_total_REBA()
 
-print(m)
-#print(neuro_neck_REBA([-50, -50, 10]))
-#print(neuro_trunk_REBA([-10, -20, 30]))
-#print(neuro_leg_REBA([20]))
-#print(neuro_upper_arm_REBA([10, 10, 10, 10, 10, 10]))
-#print(neuro_lower_arm_REBA([50, 50]))
-#print(neuro_wrist_REBA([10, 10, 10, 10, 10, 10]))
+#print(m)
 
+
+def create_super_model():
+    # neck_model = neck_learning_model()
+    # trunk_model = trunk_learning_model()
+    # leg_model = leg_learning_model()
+    # upper_arm_model = upper_arm_learning_model()
+    # lower_arm_model = lower_arm_learning_model()
+    # wrist_model = wrist_learning_model()
+    # partial_to_total_model = total_reba_from_partial_learning_model()
+
+    model_concat = concatenate([neck_model.output, trunk_model.output, leg_model.output, upper_arm_model.output, lower_arm_model.output, wrist_model.output])
+    # model_concat = Dense(1, activation='softmax')(model_concat)
+    # model = Model(inputs=[model1.input, model2.input], outputs=model_concat)
+
+    composed_model = Model(
+        inputs=[neck_model.input, trunk_model.input, leg_model.input, upper_arm_model.input, lower_arm_model.input, wrist_model.input],
+        outputs=[total_reba_from_partial_model(model_concat)]
+    )
+
+
+    return composed_model
+    #return Concatenate()([neck_model, trunk_model, leg_model.output, upper_arm_model, lower_arm_model, wrist_model])
+    
+def super_model_train():
+    super_model = create_super_model()
+    super_model.compile(optimizer=SGD(lr=0.001), loss='mse')
+
+
+    for e in tqdm(range(1)):
+        counter = 1
+        num_of_data = 1000000
+        data = {
+            'neck_model_input': np.zeros(shape=(num_of_data, 3)),
+            'trunk_model_input': np.zeros(shape=(num_of_data, 3)),
+            'leg_model_input': np.zeros(shape=(num_of_data, 1)), 
+            'upper_arm_model_input': np.zeros(shape=(num_of_data, 6)), 
+            'lower_arm_model_input': np.zeros(shape=(num_of_data, 2)), 
+            'wrist_model_input': np.zeros(shape=(num_of_data, 6))
+        }
+        y = {'sequential': np.zeros(shape=(num_of_data, 1))}
+        # for sample in product([-60, -5, 0, 10, 20, 30], [-54, -5, 0, 5, 54], [-60, -5, 0, 5, 60],\
+        #                     [-30, -5, 0, 10, 20, 60, 70], [-40, -5, 0, 5, 40], [-35, -5, 0, 5, 35],\
+        #                     [0, 30, 60, 100, 150],\
+        #                     [-47, -20, 0, 20, 45, 90, 170], [-47, -20, 0, 20, 45, 90, 170], [0, 15, 30], [0, 15, 30], [-2, 0, 2, 50, 100, 200], [-2, 0, 2, 50, 100, 200],\
+        #                     [0, 60, 100, 150], [0, 60, 100, 150],\
+        #                     [-53, -20, -15, 15, 20,53], [-53, -20, -15, 15, 20,53], [-40, -10, 0, 10, 30], [-40, -10, 0, 10, 30], [-90, -45, 0, 45, 90], [-90, -45, 0, 45, 90]):
+        for sample in tqdm(product([-60,0,20, 30], [-54,0, 54], [-60,0, 60],\
+                              [-30,0,20,60, 70], [-40,0, 40], [-35,0, 35],\
+                              [0,30,60,150],\
+                              [-47,-20,0,20,45,90, 170], [-47, -20, 0, 20, 45, 90, 170], [-2,0, 200], [-2,0, 200], [0, 30], [0, 30],\
+                              [0, 60, 100, 150], [0, 60, 100, 150],\
+                              [-53,-15,15, 47], [-53,-15,15, 47], [-40,0, 30], [-40,0, 30], [-90,0, 90], [-90,0, 90])):                    
+            if(counter % num_of_data == 0):
+                super_model.fit(data, y, verbose = 0)
+                counter = 1
+            else:
+                data['neck_model_input'][counter-1, :] = list(sample[0:3])
+                data['trunk_model_input'][counter-1, :] = list(sample[3:6])
+                data['leg_model_input'][counter-1, :] = [sample[6]]
+                data['upper_arm_model_input'][counter-1, :] = list(sample[7:13])
+                data['lower_arm_model_input'][counter-1, :] = list(sample[13:15])
+                data['wrist_model_input'][counter-1, :] = list(sample[15:21])
+                y['sequential'][counter-1, :] = [REBA.partial_to_total_REBA([REBA_neck.NeckREBA(list(sample[0:3])).neck_reba_score(),\
+                                                                            REBA_trunk.TrunkREBA( list(sample[3:6])).trunk_reba_score(),\
+                                                                            REBA_leg.LegREBA([sample[6],sample[6]]).leg_reba_score(), \
+                                                                            REBA_UA.UAREBA(list(sample[7:13])).upper_arm_reba_score(),\
+                                                                            REBA_LA.LAREBA(list(sample[13:15])).lower_arm_score(),\
+                                                                            REBA_wrist.WristREBA(list(sample[15:21])).wrist_reba_score()]).find_total_REBA()]
+            counter += 1
+        super_model.fit(data, y, verbose = 0)
+
+    model.save('./data/super_model_DNN.model')
+    #print(super_model.input_names, super_model.output_names)
+    #x_input = [[[-50.0, -50.0, 10.0], [-10.0, -20.0, 30.0], [20.0], [10.0, 10.0, 10.0, 10.0, 10.0, 10.0], [50.0, 50.0], [10.0, 10.0, 10.0, 10.0, 10.0, 10.0]]]
+    #[[-50.0, -50.0, 10.0, -10.0, -20.0, 30.0, 20.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 50.0, 50.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]] #np.array([[[-50.0, -50.0, 10.0], [-10.0, -20.0, 30.0], [20.0], [10.0, 10.0, 10.0, 10.0, 10.0, 10.0], [50.0, 50.0], [10.0, 10.0, 10.0, 10.0, 10.0, 10.0]]])
+    #y_output = [[1.0, 1.0, 1.0, 1.0,1.0,1.0]]
+    # super_model.fit({
+    #     'neck_model_input': np.array([[-50.0, -50.0, 10.0]]),
+    #     'trunk_model_input': np.array([[-10.0, -20.0, 30.0]]),
+    #     'leg_model_input': np.array([[20.0]]), 
+    #     'upper_arm_model_input': np.array([[10.0, 10.0, 10.0, 10.0, 10.0, 10.0]]), 
+    #     'lower_arm_model_input': np.array([[50.0, 50.0]]), 
+    #     'wrist_model_input': np.array([[10.0, 10.0, 10.0, 10.0, 10.0, 10.0]])
+
+    # }, 
+    # {
+    #     'concatenate': np.array([[1.0, 1.0, 1.0, 1.0,1.0,1.0]])
+    # })
+
+    # print(super_model.predict({
+    #     'neck_model_input': np.array([[-50.0, -50.0, 10.0]]),
+    #     'trunk_model_input': np.array([[-10.0, -20.0, 30.0]]),
+    #     'leg_model_input': np.array([[20.0]]), 
+    #     'upper_arm_model_input': np.array([[10.0, 10.0, 10.0, 10.0, 10.0, 10.0]]), 
+    #     'lower_arm_model_input': np.array([[50.0, 50.0]]), 
+    #     'wrist_model_input': np.array([[10.0, 10.0, 10.0, 10.0, 10.0, 10.0]])
+
+    # }))
 
 
 
 np.random.seed(42)
-#neck_learning_model()
-#print(neck_model_test())
-#trunk_learning_model()
-#print(trunk_model_test())
-#leg_learning_model()
-#print(leg_model_test())
-#upper_arm_learning_model()
-#print(upper_arm_model_test())
-#lower_arm_learning_model()
-#print(lower_arm_model_test())
-#wrist_learning_model()
-#print(wrist_model_test())
+super_model_train()
+# neck_training_model()
+# print(neck_model_test())
+# trunk_training_model()
+# print(trunk_model_test())
+# leg_training_model()
+# print(leg_model_test())
+# upper_arm_training_model()
+# print(upper_arm_model_test())
+# lower_arm_training_model()
+# print(lower_arm_model_test())
+# wrist_training_model()
+# print(wrist_model_test())
 # total_reba_from_partial_learning_model()
 # print(total_reba_from_partial_model_test())
