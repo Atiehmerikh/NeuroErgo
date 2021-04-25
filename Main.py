@@ -17,7 +17,7 @@ from tensorflow.keras.regularizers import l1, l2
 from tensorflow.keras import initializers
 from tensorflow.keras.layers import Activation
 from tensorflow.keras import backend as K
-from tqdm import tqdm
+#from tqdm import tqdm
 import math
 
 # Neck
@@ -613,9 +613,9 @@ def super_model_train():
     super_model.compile(optimizer=SGD(lr=0.001), loss='mse')
 
 
-    for e in tqdm(range(1)):
+    for e in range(1):
         counter = 1
-        num_of_data = 1000000
+        num_of_data = 10000000
         data = {
             'neck_model_input': np.zeros(shape=(num_of_data, 3)),
             'trunk_model_input': np.zeros(shape=(num_of_data, 3)),
@@ -631,12 +631,19 @@ def super_model_train():
         #                     [-47, -20, 0, 20, 45, 90, 170], [-47, -20, 0, 20, 45, 90, 170], [0, 15, 30], [0, 15, 30], [-2, 0, 2, 50, 100, 200], [-2, 0, 2, 50, 100, 200],\
         #                     [0, 60, 100, 150], [0, 60, 100, 150],\
         #                     [-53, -20, -15, 15, 20,53], [-53, -20, -15, 15, 20,53], [-40, -10, 0, 10, 30], [-40, -10, 0, 10, 30], [-90, -45, 0, 45, 90], [-90, -45, 0, 45, 90]):
-        for sample in tqdm(product([-60,0,20, 30], [-54,0, 54], [-60,0, 60],\
+        # data_sample_size = 4 * 3 * 3 *\
+        #                    5 * 3 * 3 *\
+        #                    4 *\
+        #                    7 * 7 * 3 * 3 * 2 * 2 *\
+        #                    4 * 4 *\
+        #                    4 * 4 * 3 * 3 * 3 * 3
+        # print(data_sample_size/num_of_data)
+        for sample in product([-60,0,20, 30], [-54,0, 54], [-60,0, 60],\
                               [-30,0,20,60, 70], [-40,0, 40], [-35,0, 35],\
                               [0,30,60,150],\
                               [-47,-20,0,20,45,90, 170], [-47, -20, 0, 20, 45, 90, 170], [-2,0, 200], [-2,0, 200], [0, 30], [0, 30],\
                               [0, 60, 100, 150], [0, 60, 100, 150],\
-                              [-53,-15,15, 47], [-53,-15,15, 47], [-40,0, 30], [-40,0, 30], [-90,0, 90], [-90,0, 90])):                    
+                              [-53,-15,15, 47], [-53,-15,15, 47], [-40,0, 30], [-40,0, 30], [-90,0, 90], [-90,0, 90]):                    
             if(counter % num_of_data == 0):
                 super_model.fit(data, y, verbose = 0)
                 counter = 1
