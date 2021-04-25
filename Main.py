@@ -612,7 +612,7 @@ def super_model_train():
     super_model = create_super_model()
     super_model.compile(optimizer=SGD(lr=0.001), loss='mse')
 
-
+    print("training is started!")
     for e in range(1):
         counter = 1
         coarse_counter = 1
