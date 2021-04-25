@@ -615,6 +615,7 @@ def super_model_train():
 
     for e in range(1):
         counter = 1
+        coarse_counter = 1
         num_of_data = 10000000
         data = {
             'neck_model_input': np.zeros(shape=(num_of_data, 3)),
@@ -647,6 +648,8 @@ def super_model_train():
             if(counter % num_of_data == 0):
                 super_model.fit(data, y, verbose = 0)
                 counter = 1
+                print(general_counter)
+                coarse_counter += 1
             else:
                 data['neck_model_input'][counter-1, :] = list(sample[0:3])
                 data['trunk_model_input'][counter-1, :] = list(sample[3:6])
