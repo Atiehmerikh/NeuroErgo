@@ -8,7 +8,7 @@ import REBA.body_part_reba_calculator.partial_REBA_to_total_REBA as REBA
 
 import numpy as np
 from itertools import product
-from sklearn.model_selection import train_test_split
+#from sklearn.model_selection import train_test_split
 from tensorflow.keras.layers import Dense, Dropout, Concatenate, concatenate
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.optimizers import Adam, RMSprop, Nadam, Adamax, Adadelta, Adagrad, SGD
