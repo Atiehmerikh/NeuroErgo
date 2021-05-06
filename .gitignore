@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 data_backup/
-data/
+data/super_samples
