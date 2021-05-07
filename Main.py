@@ -12,7 +12,7 @@ import _pickle as cPickle
 import multiprocessing as mp
 from itertools import product
 #from sklearn.model_selection import train_test_split
-import tensorflow as tf
+import tensorflow
 from tensorflow.keras.layers import Dense, Dropout, Concatenate, concatenate
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.optimizers import Adam, RMSprop, Nadam, Adamax, Adadelta, Adagrad, SGD
@@ -708,7 +708,7 @@ def generate_super_model_training_data():
 
 def super_model_train():
 
-    with tf.device('/GPU:0'):
+    with tensorflow.device('/GPU:0'):
         super_model = create_super_model()
         super_model.compile(optimizer=SGD(lr=0.001), loss='mse')
 
