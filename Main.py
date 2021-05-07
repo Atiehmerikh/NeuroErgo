@@ -12,7 +12,7 @@ import _pickle as cPickle
 import multiprocessing as mp
 from itertools import product
 #from sklearn.model_selection import train_test_split
-import tensorflow
+#import tensorflow
 from tensorflow.keras.layers import Dense, Dropout, Concatenate, concatenate
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.optimizers import Adam, RMSprop, Nadam, Adamax, Adadelta, Adagrad, SGD
@@ -708,25 +708,25 @@ def generate_super_model_training_data():
 
 def super_model_train():
 
-    with tensorflow.device('/GPU:0'):
-        super_model = create_super_model()
-        super_model.compile(optimizer=SGD(lr=0.001), loss='mse')
+    #with tensorflow.device('/GPU:0'):
+    super_model = create_super_model()
+    super_model.compile(optimizer=SGD(lr=0.001), loss='mse')
 
-        print("training is started!")
-        for i in range(1, 2917):
-            file_number = ''
-            file_number = file_number.join(['0']* (3- find_largest_power_of_ten(i))) + str(i)
-            file_name = './data/super_samples/' + file_number + '.pickle'
-            zipped_file_name = './data/super_samples/' + file_number + '.gz'
-            data = {}
-            with gzip.open(zipped_file_name, 'rb') as f_in:
-                with open(file_name, 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-                    data = retrieve_from_pickle(file_name)
-                    os.remove(file_name)
-            
-            super_model.fit(data, data['y'], verbose = 0)
-            super_mode.save('./data/super_model_DNN.model')
+    print("training is started!")
+    for i in range(1, 2917):
+        file_number = ''
+        file_number = file_number.join(['0']* (3- find_largest_power_of_ten(i))) + str(i)
+        file_name = './data/super_samples/' + file_number + '.pickle'
+        zipped_file_name = './data/super_samples/' + file_number + '.gz'
+        data = {}
+        with gzip.open(zipped_file_name, 'rb') as f_in:
+            with open(file_name, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+                data = retrieve_from_pickle(file_name)
+                os.remove(file_name)
+        
+        super_model.fit(data, data['y'], verbose = 0)
+        super_mode.save('./data/super_model_DNN.model')
         # counter = 1
         # coarse_counter = 1
         # num_of_data = 10000000
