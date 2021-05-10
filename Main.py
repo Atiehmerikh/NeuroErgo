@@ -21,7 +21,7 @@ from tensorflow.keras.regularizers import l1, l2
 from tensorflow.keras import initializers
 from tensorflow.keras.layers import Activation
 from tensorflow.keras import backend as K
-#from tqdm import tqdm
+from tqdm import tqdm
 import math
 import gzip
 import shutil
@@ -708,12 +708,14 @@ def generate_super_model_training_data():
 
 def super_model_train():
 
-    #with tensorflow.device('/GPU:0'):
     super_model = create_super_model()
     super_model.compile(optimizer=SGD(lr=0.001), loss='mse')
 
+    # uncomment if you have a pretrained model
+    #super_model = load_model('./data/super_model_DNN.model')
+
     print("training is started!")
-    for i in range(1, 2917):
+    for i in tqdm(range(1, 2917)):
         file_number = ''
         file_number = file_number.join(['0']* (3- find_largest_power_of_ten(i))) + str(i)
         file_name = './data/super_samples/' + file_number + '.pickle'
@@ -726,87 +728,7 @@ def super_model_train():
                 os.remove(file_name)
         
         super_model.fit(data, data['y'], verbose = 0)
-        super_mode.save('./data/super_model_DNN.model')
-        # counter = 1
-        # coarse_counter = 1
-        # num_of_data = 10000000
-        # data = {
-        #     'neck_model_input': np.zeros(shape=(num_of_data, 3)),
-        #     'trunk_model_input': np.zeros(shape=(num_of_data, 3)),
-        #     'leg_model_input': np.zeros(shape=(num_of_data, 1)), 
-        #     'upper_arm_model_input': np.zeros(shape=(num_of_data, 6)), 
-        #     'lower_arm_model_input': np.zeros(shape=(num_of_data, 2)), 
-        #     'wrist_model_input': np.zeros(shape=(num_of_data, 6))
-        # }
-        # y = {'sequential': np.zeros(shape=(num_of_data, 1))}
-        # for sample in product([-60, -5, 0, 10, 20, 30], [-54, -5, 0, 5, 54], [-60, -5, 0, 5, 60],\
-        #                     [-30, -5, 0, 10, 20, 60, 70], [-40, -5, 0, 5, 40], [-35, -5, 0, 5, 35],\
-        #                     [0, 30, 60, 100, 150],\
-        #                     [-47, -20, 0, 20, 45, 90, 170], [-47, -20, 0, 20, 45, 90, 170], [0, 15, 30], [0, 15, 30], [-2, 0, 2, 50, 100, 200], [-2, 0, 2, 50, 100, 200],\
-        #                     [0, 60, 100, 150], [0, 60, 100, 150],\
-        #                     [-53, -20, -15, 15, 20,53], [-53, -20, -15, 15, 20,53], [-40, -10, 0, 10, 30], [-40, -10, 0, 10, 30], [-90, -45, 0, 45, 90], [-90, -45, 0, 45, 90]):
-        # data_sample_size = 4 * 3 * 3 *\
-        #                    5 * 3 * 3 *\
-        #                    4 *\
-        #                    7 * 7 * 3 * 3 * 2 * 2 *\
-        #                    4 * 4 *\
-        #                    4 * 4 * 3 * 3 * 3 * 3
-        # print(data_sample_size/num_of_data)
-        # for sample in product([-60,0,20, 30], [-54,0, 54], [-60,0, 60],\
-        #                       [-30,0,20,60, 70], [-40,0, 40], [-35,0, 35],\
-        #                       [0,30,60,150],\
-        #                       [-47,-20,0,20,45,90, 170], [-47, -20, 0, 20, 45, 90, 170], [-2,0, 200], [-2,0, 200], [0, 30], [0, 30],\
-        #                       [0, 60, 100, 150], [0, 60, 100, 150],\
-        #                       [-53,-15,15, 47], [-53,-15,15, 47], [-40,0, 30], [-40,0, 30], [-90,0, 90], [-90,0, 90]):                    
-        #     if(counter % num_of_data == 0):
-        #         super_model.fit(data, y, verbose = 0)
-        #         counter = 1
-        #         print(general_counter)
-        #         coarse_counter += 1
-        #     else:
-        #         data['neck_model_input'][counter-1, :] = list(sample[0:3])
-        #         data['trunk_model_input'][counter-1, :] = list(sample[3:6])
-        #         data['leg_model_input'][counter-1, :] = [sample[6]]
-        #         data['upper_arm_model_input'][counter-1, :] = list(sample[7:13])
-        #         data['lower_arm_model_input'][counter-1, :] = list(sample[13:15])
-        #         data['wrist_model_input'][counter-1, :] = list(sample[15:21])
-        #         y['sequential'][counter-1, :] = [REBA.partial_to_total_REBA([REBA_neck.NeckREBA(list(sample[0:3])).neck_reba_score(),\
-        #                                                                     REBA_trunk.TrunkREBA( list(sample[3:6])).trunk_reba_score(),\
-        #                                                                     REBA_leg.LegREBA([sample[6],sample[6]]).leg_reba_score(), \
-        #                                                                     REBA_UA.UAREBA(list(sample[7:13])).upper_arm_reba_score(),\
-        #                                                                     REBA_LA.LAREBA(list(sample[13:15])).lower_arm_score(),\
-        #                                                                     REBA_wrist.WristREBA(list(sample[15:21])).wrist_reba_score()]).find_total_REBA()]
-        #     counter += 1
-        #super_model.fit(data, y, verbose = 0)
-    
-    #model.save('./data/super_model_DNN.model')
-    #print(super_model.input_names, super_model.output_names)
-    #x_input = [[[-50.0, -50.0, 10.0], [-10.0, -20.0, 30.0], [20.0], [10.0, 10.0, 10.0, 10.0, 10.0, 10.0], [50.0, 50.0], [10.0, 10.0, 10.0, 10.0, 10.0, 10.0]]]
-    #[[-50.0, -50.0, 10.0, -10.0, -20.0, 30.0, 20.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 50.0, 50.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]] #np.array([[[-50.0, -50.0, 10.0], [-10.0, -20.0, 30.0], [20.0], [10.0, 10.0, 10.0, 10.0, 10.0, 10.0], [50.0, 50.0], [10.0, 10.0, 10.0, 10.0, 10.0, 10.0]]])
-    #y_output = [[1.0, 1.0, 1.0, 1.0,1.0,1.0]]
-    # super_model.fit({
-    #     'neck_model_input': np.array([[-50.0, -50.0, 10.0]]),
-    #     'trunk_model_input': np.array([[-10.0, -20.0, 30.0]]),
-    #     'leg_model_input': np.array([[20.0]]), 
-    #     'upper_arm_model_input': np.array([[10.0, 10.0, 10.0, 10.0, 10.0, 10.0]]), 
-    #     'lower_arm_model_input': np.array([[50.0, 50.0]]), 
-    #     'wrist_model_input': np.array([[10.0, 10.0, 10.0, 10.0, 10.0, 10.0]])
-
-    # }, 
-    # {
-    #     'concatenate': np.array([[1.0, 1.0, 1.0, 1.0,1.0,1.0]])
-    # })
-
-    # print(super_model.predict({
-    #     'neck_model_input': np.array([[-50.0, -50.0, 10.0]]),
-    #     'trunk_model_input': np.array([[-10.0, -20.0, 30.0]]),
-    #     'leg_model_input': np.array([[20.0]]), 
-    #     'upper_arm_model_input': np.array([[10.0, 10.0, 10.0, 10.0, 10.0, 10.0]]), 
-    #     'lower_arm_model_input': np.array([[50.0, 50.0]]), 
-    #     'wrist_model_input': np.array([[10.0, 10.0, 10.0, 10.0, 10.0, 10.0]])
-
-    # }))
-
+        super_model.save('./data/super_model_DNN.model')
 
 
 np.random.seed(42)
