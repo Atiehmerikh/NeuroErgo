@@ -731,8 +731,37 @@ def super_model_train():
         super_model.save('./data/super_model_DNN.model')
 
 
+def super_model_test():
+    
+    super_model = load_model('./data/super_model_DNN.model')
+    abs_sum = 0
+    num_of_data = 0
+
+    print("testing is started!")
+    for i in tqdm(range(1, 2917)):
+        file_number = ''
+        file_number = file_number.join(['0']* (3- find_largest_power_of_ten(i))) + str(i)
+        file_name = './data/super_samples/' + file_number + '.pickle'
+        zipped_file_name = './data/super_samples/' + file_number + '.gz'
+        data = {}
+        with gzip.open(zipped_file_name, 'rb') as f_in:
+            with open(file_name, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+                data = retrieve_from_pickle(file_name)
+                os.remove(file_name)
+        
+        pred = super_model.predict(data)
+        y_train = data['y']['sequential']
+        abs_sum = 0
+        num_of_data += len(y_train)
+
+        abs_sum += np.sum(np.absolute(np.subtract(y_train, pred)))
+
+    return(abs_sum/ num_of_data, abs_sum, num_of_data)
+
+
 np.random.seed(42)
-super_model_train()
+print(super_model_test())
 #generate_super_model_training_data()
 
 
