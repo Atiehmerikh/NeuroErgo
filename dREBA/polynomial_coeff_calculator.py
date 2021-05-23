@@ -2,17 +2,16 @@ import sympy as sym
 import numpy as np
 
 
-
 class polynomial_generator:
 
-    def squared_error(self, real_value,predicted_value):
+    def squared_error(self, real_value, predicted_value):
         error = 0
         for i in range(len(real_value)):
-            error += (predicted_value[i] - real_value[i])**2
+            error += (predicted_value[i] - real_value[i]) ** 2
         error = sym.sympify(error)
-        return 1/(len(real_value))*error
+        return 1 / (len(real_value)) * error
 
-    def neck_polynomial(self,training_points,real_partial_REBA_values):
+    def polynomial_coefficients_calculator(self,training_points,real_partial_REBA_values):
         a_2 = sym.Symbol('a_2')
         a_1 = sym.Symbol('a_1')
         a_0 = sym.Symbol('a_0')
@@ -31,6 +30,10 @@ class polynomial_generator:
                       [df_da0.args[1].args[0], df_da0.args[2].args[0], df_da0.args[3].args[0]]
                       ],dtype='float')
         b = np.array([df_da2.args[0], df_da1.args[0], df_da0.args[0]],dtype='float')
-        x = np.linalg.solve(a, b)
-        print(x)
+        # [a_2,a_1,a_0]
+        coeffs = np.linalg.solve(a, b)
+        return coeffs
+
+
+
 
