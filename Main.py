@@ -666,41 +666,37 @@ def generate_super_model_training_data():
                                       [-30,0,20,60], [-40,0, 40], [-35,0, 35],\
                                       [0,30,60]):
 
-        if counter > 2830:
-            with mp.Pool(16) as workers:
-                sample_part_2 = np.array(workers.map(identity, product(
-                                            [-20,0,20,45], [-20, 0, 20, 45], [-2,0], [-2,0], [0, 30], [0, 30],\
-                                            [0, 60, 100], [0, 60, 100],\
-                                            [-53,-15,15], [-53,-15,15], [-40,0, 30], [-40,0, 30], [-90,0, 90], [-90,0, 90])))
-                                            
-                
+        with mp.Pool(16) as workers:
+            sample_part_2 = np.array(workers.map(identity, product(
+                                        [-20,0,20,45], [-20, 0, 20, 45], [-2,0], [-2,0], [0, 30], [0, 30],\
+                                        [0, 60, 100], [0, 60, 100],\
+                                        [-53,-15,15], [-53,-15,15], [-40,0, 30], [-40,0, 30], [-90,0, 90], [-90,0, 90])))
+                                        
+            
 
-                data['neck_model_input'][:, :] = np.tile(np.array(list(sample_part_1[0:3])), (num_of_data,1)).tolist()
-                data['trunk_model_input'][:, :] = np.tile(np.array(list(sample_part_1[3:6])), (num_of_data,1)).tolist()
-                data['leg_model_input'][:, :] = np.tile(np.array([sample_part_1[6]]), (num_of_data,1)).tolist()
-                data['upper_arm_model_input'][:, :] = sample_part_2[:, 0:6].tolist()
-                data['lower_arm_model_input'][:, :] = sample_part_2[:, 6:8].tolist() #np.tile(np.array(list(sample_part_1[7:9])), (num_of_data,1)).tolist() #sample_part_2[:, 6:8].tolist()
-                data['wrist_model_input'][:, :] = sample_part_2[:, 8:].tolist()
-                # y['sequential'][counter-1, :] = [REBA.partial_to_total_REBA([REBA_neck.NeckREBA(list(sample[0:3])).neck_reba_score(),\
-                #                                                             REBA_trunk.TrunkREBA( list(sample[3:6])).trunk_reba_score(),\
-                #                                                             REBA_leg.LegREBA([sample[6],sample[6]]).leg_reba_score(), \
-                #                                                             REBA_UA.UAREBA(list(sample[7:13])).upper_arm_reba_score(),\
-                #                                                             REBA_LA.LAREBA(list(sample[13:15])).lower_arm_score(),\
-                #                                                             REBA_wrist.WristREBA(list(sample[15:21])).wrist_reba_score()]).find_total_REBA()]
-                y['sequential'][:, :] = np.apply_along_axis(lambda y: calc_total_reba(sample_part_1, y), axis=1, arr=sample_part_2).tolist()
-                data['y'] = y
-                file_number = ''
-                file_number = file_number.join(['0']* (3- find_largest_power_of_ten(counter))) + str(counter)
-                file_name = './data/super_samples/' + file_number + '.pickle'
-                store_in_pickle(file_name, data)
-                
-                with open(file_name, 'rb') as f_in, gzip.open('./data/super_samples/' + file_number + ".gz", 'wb') as f_out:
-                    f_out.writelines(f_in)
-                    os.remove(file_name)
-                counter += 1
-        else:
+            data['neck_model_input'][:, :] = np.tile(np.array(list(sample_part_1[0:3])), (num_of_data,1)).tolist()
+            data['trunk_model_input'][:, :] = np.tile(np.array(list(sample_part_1[3:6])), (num_of_data,1)).tolist()
+            data['leg_model_input'][:, :] = np.tile(np.array([sample_part_1[6]]), (num_of_data,1)).tolist()
+            data['upper_arm_model_input'][:, :] = sample_part_2[:, 0:6].tolist()
+            data['lower_arm_model_input'][:, :] = sample_part_2[:, 6:8].tolist() #np.tile(np.array(list(sample_part_1[7:9])), (num_of_data,1)).tolist() #sample_part_2[:, 6:8].tolist()
+            data['wrist_model_input'][:, :] = sample_part_2[:, 8:].tolist()
+            # y['sequential'][counter-1, :] = [REBA.partial_to_total_REBA([REBA_neck.NeckREBA(list(sample[0:3])).neck_reba_score(),\
+            #                                                             REBA_trunk.TrunkREBA( list(sample[3:6])).trunk_reba_score(),\
+            #                                                             REBA_leg.LegREBA([sample[6],sample[6]]).leg_reba_score(), \
+            #                                                             REBA_UA.UAREBA(list(sample[7:13])).upper_arm_reba_score(),\
+            #                                                             REBA_LA.LAREBA(list(sample[13:15])).lower_arm_score(),\
+            #                                                             REBA_wrist.WristREBA(list(sample[15:21])).wrist_reba_score()]).find_total_REBA()]
+            y['sequential'][:, :] = np.apply_along_axis(lambda y: calc_total_reba(sample_part_1, y), axis=1, arr=sample_part_2).tolist()
+            data['y'] = y
+            file_number = ''
+            file_number = file_number.join(['0']* (3- find_largest_power_of_ten(counter))) + str(counter)
+            file_name = './data/super_samples/' + file_number + '.pickle'
+            store_in_pickle(file_name, data)
+            
+            with open(file_name, 'rb') as f_in, gzip.open('./data/super_samples/' + file_number + ".gz", 'wb') as f_out:
+                f_out.writelines(f_in)
+                os.remove(file_name)
             counter += 1
-            continue    
 
         
 
@@ -758,6 +754,13 @@ def super_model_test():
         abs_sum += np.sum(np.absolute(np.subtract(y_train, pred)))
 
     return(abs_sum/ num_of_data, abs_sum, num_of_data)
+
+
+
+
+
+
+
 
 
 np.random.seed(42)
