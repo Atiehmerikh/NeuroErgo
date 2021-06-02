@@ -56,7 +56,7 @@ def dReba_coeff_generator(M,N,A):
     print(dREBA_coeffs)
 
 def dREBA_polynomial_matrix_generator():
-    A = np.empty((0, 2), int)
+    A = []
 
     # polynomial coefficients:(training point,partial reba score)
     m_pcoeff = pCoeff.polynomial_generator()
@@ -92,36 +92,36 @@ def dREBA_polynomial_matrix_generator():
     left_wrist_side_polynomial_coefficients = m_pcoeff.polynomial_coefficients_calculator([-40,0, 30], [1,0,1])
     left_wrist_twist_polynomial_coefficients = m_pcoeff.polynomial_coefficients_calculator( [-90,0, 90] , [1,0,1])
 
-    np.append(A, np.array([Neck_flex_polynomial_coefficients]), axis=0)
-    np.append(A, np.array([Neck_side_polynomial_coefficients]), axis=0)
-    np.append(A, np.array([Neck_twist_polynomial_coefficients]), axis=0)
+    A.append(Neck_flex_polynomial_coefficients)
+    A.append(Neck_side_polynomial_coefficients)
+    A.append(Neck_twist_polynomial_coefficients)
 
-    np.append(A, np.array([trunk_flex_polynomial_coefficients]), axis=0)
-    np.append(A, np.array([trunk_side_polynomial_coefficients]), axis=0)
-    np.append(A, np.array([trunk_twist_polynomial_coefficients]), axis=0)
+    A.append(trunk_flex_polynomial_coefficients)
+    A.append(trunk_side_polynomial_coefficients)
+    A.append(trunk_twist_polynomial_coefficients)
 
-    np.append(A, np.array([leg_bending_polynomial_coefficients]), axis=0)
+    A.append(leg_bending_polynomial_coefficients)
 
-    np.append(A, np.array([right_upper_arm_front_adduction_polynomial_coefficients]), axis=0)
-    np.append(A, np.array([right_upper_arm_side_adduction_polynomial_coefficients]), axis=0)
-    np.append(A, np.array([right_shoulder_rise_polynomial_coefficients]), axis=0)
+    A.append(right_upper_arm_front_adduction_polynomial_coefficients)
+    A.append(right_upper_arm_side_adduction_polynomial_coefficients)
+    A.append(right_shoulder_rise_polynomial_coefficients)
 
-    np.append(A, np.array([left_upper_arm_front_adduction_polynomial_coefficients]), axis=0)
-    np.append(A, np.array([left_upper_arm_side_adduction_polynomial_coefficients]), axis=0)
-    np.append(A, np.array([left_shoulder_rise_polynomial_coefficients]), axis=0)
+    A.append(left_upper_arm_front_adduction_polynomial_coefficients)
+    A.append(left_upper_arm_side_adduction_polynomial_coefficients)
+    A.append(left_shoulder_rise_polynomial_coefficients)
 
-    np.append(A, np.array([right_lower_arm_front_adduction_polynomial_coefficients]), axis=0)
-    np.append(A, np.array([left_lower_arm_front_adduction_polynomial_coefficients]), axis=0)
+    A.append(right_lower_arm_front_adduction_polynomial_coefficients)
+    A.append(left_lower_arm_front_adduction_polynomial_coefficients)
 
-    np.append(A, np.array([right_wrist_flex_polynomial_coefficients]), axis=0)
-    np.append(A, np.array([right_wrist_side_polynomial_coefficients]), axis=0)
-    np.append(A, np.array([right_wrist_twist_polynomial_coefficients]), axis=0)
+    A.append(right_wrist_flex_polynomial_coefficients)
+    A.append(right_wrist_side_polynomial_coefficients)
+    A.append(right_wrist_twist_polynomial_coefficients)
 
-    np.append(A, np.array([left_wrist_flex_polynomial_coefficients]), axis=0)
-    np.append(A, np.array([left_wrist_side_polynomial_coefficients]), axis=0)
-    np.append(A, np.array([left_wrist_twist_polynomial_coefficients]), axis=0)
+    A.append(left_wrist_flex_polynomial_coefficients)
+    A.append(left_wrist_side_polynomial_coefficients)
+    A.append(left_wrist_twist_polynomial_coefficients)
 
-    return A
+    return np.array(A)
 
 def train_dREBA(sample_size):
     random.seed(1)
@@ -143,6 +143,9 @@ def train_dREBA(sample_size):
         samples_REBA[i] = calc_total_reba(a_sample)
 
     generator = dREBA_polynomial_matrix_generator()
+
+    print("generator is ready")
+    print(generator)
     dREBA_coeffs = dReba_coeff_generator(samples,samples_REBA,generator)
     return dREBA_coeffs
 
