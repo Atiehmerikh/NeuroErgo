@@ -71,12 +71,12 @@ def dREBA_polynomial_matrix_generator():
     leg_bending_polynomial_coefficients = m_pcoeff.polynomial_coefficients_calculator([0,30,60], [1,1,2])
 
     right_upper_arm_front_adduction_polynomial_coefficients = m_pcoeff.polynomial_coefficients_calculator([-20, 0, 20, 45,90], [2,1,2,3,4])
-    right_upper_arm_side_adduction_polynomial_coefficients = m_pcoeff.polynomial_coefficients_calculator([-2,0],[1,0,1])
-    right_shoulder_rise_polynomial_coefficients = m_pcoeff.polynomial_coefficients_calculator([0, 30],[1,0,1])
+    right_upper_arm_side_adduction_polynomial_coefficients = m_pcoeff.polynomial_coefficients_calculator([-2,0],[1,0])
+    right_shoulder_rise_polynomial_coefficients = m_pcoeff.polynomial_coefficients_calculator([0, 30],[0,1])
 
     left_upper_arm_front_adduction_polynomial_coefficients = m_pcoeff.polynomial_coefficients_calculator([-20, 0, 20, 45],  [2,1,2,3,4])
-    left_upper_arm_side_adduction_polynomial_coefficients = m_pcoeff.polynomial_coefficients_calculator([-2,0],[1,0,1])
-    left_shoulder_rise_polynomial_coefficients = m_pcoeff.polynomial_coefficients_calculator([0, 30],[1,0,1])
+    left_upper_arm_side_adduction_polynomial_coefficients = m_pcoeff.polynomial_coefficients_calculator([-2,0],[1,0])
+    left_shoulder_rise_polynomial_coefficients = m_pcoeff.polynomial_coefficients_calculator([0, 30],[0,1])
 
     right_lower_arm_front_adduction_polynomial_coefficients = m_pcoeff.polynomial_coefficients_calculator(
         [0, 60, 100], [2,1,2])

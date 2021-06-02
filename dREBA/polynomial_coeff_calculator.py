@@ -62,16 +62,17 @@ class polynomial_generator:
         df_da2_coeffs = self.__extract_a_polynomial_coefficients(df_da2)
         df_da1_coeffs = self.__extract_a_polynomial_coefficients(df_da1)
         df_da0_coeffs = self.__extract_a_polynomial_coefficients(df_da0)
-        #a = [[0.0,0.0,0.0], [0.0,0.0,0.0], [0.0,0.0,0.0]]
 
-        print(df_da2_coeffs)
-        print(df_da1_coeffs)
-        print(df_da0_coeffs)
+        try:
+            a = np.array([df_da2_coeffs[1:4], df_da1_coeffs[1:4], df_da0_coeffs[1:4]], dtype='float')
+            b = np.array([df_da2_coeffs[0], df_da1_coeffs[0], df_da0_coeffs[0]], dtype='float')
+            
+            coeffs = np.linalg.solve(a, b)
+        except Exception as e:
+            print(a)
+            print(b)
 
-        a = np.array([df_da2_coeffs[1:4], df_da1_coeffs[1:4], df_da0_coeffs[1:4]], dtype='float')
-        b = np.array([df_da2_coeffs[0], df_da1_coeffs[0], df_da0_coeffs[0]], dtype='float')
-        # [a_2,a_1,a_0]
-        coeffs = np.linalg.solve(a, b)
+            raise Exception(e)
         return coeffs
 
 
