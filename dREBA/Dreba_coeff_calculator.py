@@ -3,7 +3,7 @@ import sympy as sym
 
 class Dreba_error_each_posture:
     def dReba_symbolic_error(self, polynomial_coeff, posture_angles, posture_real_REBA):
-        w = sym.symbols('w_0:13')
+        w = sym.symbols('w_0:21')
         dREBA = 0
         # number of body segments: Neck flexion, neck side, ...
         m = 21
