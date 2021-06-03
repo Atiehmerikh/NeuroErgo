@@ -1,6 +1,8 @@
 import numpy as np
 import sys, os
 sys.path.append(os.path.abspath(os.path.join('..')))
+from tqdm import tqdm
+
 
 import REBA.body_part_reba_calculator.Degree_to_REBA.neck_reba_score as REBA_neck
 import REBA.body_part_reba_calculator.Degree_to_REBA.trunk_reba_score as REBA_trunk
@@ -14,6 +16,18 @@ import polynomial_coeff_calculator as pCoeff
 import Dreba_coeff_calculator as DREBA
 import sympy as sym
 import random
+import _pickle as cPickle
+
+def retrieve_from_pickle(file_address):
+    f = open(file_address, "rb")
+    p = cPickle.Unpickler(f)
+    seqs_list = p.load()
+    return seqs_list
+
+def store_in_pickle(file_address, data):
+    p = cPickle.Pickler(open(file_address, "wb")) 
+    p.fast = True 
+    p.dump(data)
 
 def calc_total_reba(x):
     return REBA.partial_to_total_REBA([REBA_neck.NeckREBA(list(x[0:3])).neck_reba_score(),\
@@ -31,11 +45,18 @@ def dReba_coeff_generator(M,N,A):
     # m is number of body degrees
     total_error = 0
     n = len(N)
-    for i in range(n):
+    m_dREBA = DREBA.Dreba_error_each_posture()
+    error_list = []
+    for i in tqdm(range(n)):
         # for each posture
-        m_dREBA = DREBA.Dreba_error_each_posture()
         each_posture_error = m_dREBA.dReba_symbolic_error(A, M[i, :], N[i])
-        total_error += each_posture_error
+        error_list.append(each_posture_error)
+    
+    print("all errors have been collected")
+
+    total_error = sym.Add(*error_list)
+
+    print("total error is computed")
 
     total_error = sym.sympify(sym.expand((1/n)*total_error))
     w = sym.symbols('w_0:21')
@@ -45,12 +66,15 @@ def dReba_coeff_generator(M,N,A):
     row =[]
     for i in range(len(w)):
         df_dw.append(sym.diff(total_error, w[i]))
+
     for i in range(len(df_dw)):
         for j in range(1,len(df_dw)+1):
             elem = df_dw[i].args[j].args[0]
             row.append(elem)
         a.append(row)
         b.append(df_dw[i].args[0])
+
+    print("before linear solving")
 
     dREBA_coeffs = np.linalg.solve(a, b)
     print(dREBA_coeffs)
@@ -143,15 +167,13 @@ def train_dREBA(sample_size):
         samples_REBA[i] = calc_total_reba(a_sample)
 
     generator = dREBA_polynomial_matrix_generator()
-
-    print("generator is ready")
-    print(generator)
     dREBA_coeffs = dReba_coeff_generator(samples,samples_REBA,generator)
     return dREBA_coeffs
 
 
 if __name__ == '__main__':
-    train_dREBA(10000)
+    dREBA_coeffs = train_dREBA(10000)
+    store_in_pickle("data/coeffs_10000.pkl",dREBA_coeffs)
    # reading the input file(M,N)
 #    A = dREBA_polynomial_matrix_generator()
 

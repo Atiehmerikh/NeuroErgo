@@ -58,7 +58,6 @@ class polynomial_generator:
         df_da1 = sym.diff(sq_error,a_1)
         df_da0 = sym.diff(sq_error,a_0)
 
-        print()
         df_da2_coeffs = self.__extract_a_polynomial_coefficients(df_da2)
         df_da1_coeffs = self.__extract_a_polynomial_coefficients(df_da1)
         df_da0_coeffs = self.__extract_a_polynomial_coefficients(df_da0)
