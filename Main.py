@@ -28,7 +28,7 @@ import shutil
 import os
 import time
 import pandas as pd
-
+from human_forward_kinematic import *
 
 def retrieve_from_pickle(file_address):
     f = open(file_address, "rb")
@@ -803,10 +803,44 @@ def super_model_test_error():
 
 
 
+super_model_for_optimization = load_model('./data/super_model_DNN.model')
+
+def objective_function(angles):
+    target = np.array([2,2,2])
+    num_of_data = 1
+    data = {
+        'neck_model_input': np.zeros(shape=(num_of_data, 3)),
+        'trunk_model_input': np.zeros(shape=(num_of_data, 3)),
+        'leg_model_input': np.zeros(shape=(num_of_data, 1)), 
+        'upper_arm_model_input': np.zeros(shape=(num_of_data, 6)), 
+        'lower_arm_model_input': np.zeros(shape=(num_of_data, 2)), 
+        'wrist_model_input': np.zeros(shape=(num_of_data, 6))
+    }
+
+    data['neck_model_input'][:, :] = [angles[0:3]]
+    data['trunk_model_input'][:, :] = [angles[3:6]]
+    data['leg_model_input'][:, :] = [[angles[6]]]
+    data['upper_arm_model_input'][:, :] = [angles[7:13]]
+    data['lower_arm_model_input'][:, :] = [angles[13:15]]
+    data['wrist_model_input'][:, :] = [angles[15:21]]
+
+    pred = super_model_for_optimization.predict(data)
+    pred = list(chain(*pred))[0]
+
+    fk = forward_kinematics(angles)
+    end_effector_position = fk.total_human_body_FK()
+    dist = np.linalg.norm(np.array(end_effector_position) - target)
+    return pred + dist
 
 
-np.random.seed(42)
-print(super_model_test_error())
+
+
+if __name__ == "__main__": 
+    print(objective_function([0] * 21))
+
+
+#np.random.seed(42)
+#print(super_model_test_error())
 #generate_super_model_training_data()
 
 
