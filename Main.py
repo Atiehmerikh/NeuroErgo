@@ -10,7 +10,7 @@ import numpy as np
 import _pickle as cPickle
 
 import multiprocessing as mp
-from itertools import product
+from itertools import product, chain
 #from sklearn.model_selection import train_test_split
 #import tensorflow
 from tensorflow.keras.layers import Dense, Dropout, Concatenate, concatenate
@@ -27,6 +27,8 @@ import gzip
 import shutil
 import os
 import time
+import pandas as pd
+
 
 def retrieve_from_pickle(file_address):
     f = open(file_address, "rb")
@@ -727,7 +729,7 @@ def super_model_train():
         super_model.save('./data/super_model_DNN.model')
 
 
-def super_model_test():
+def super_model_training_error():
     
     super_model = load_model('./data/super_model_DNN.model')
     abs_sum = 0
@@ -756,7 +758,47 @@ def super_model_test():
     return(abs_sum/ num_of_data, abs_sum, num_of_data)
 
 
+def super_model_test_error():
+    
+    super_model = load_model('./data/super_model_DNN.model')
+    abs_sum = 0
+    num_of_data = 1000000
+    data = {
+        'neck_model_input': np.zeros(shape=(num_of_data, 3)),
+        'trunk_model_input': np.zeros(shape=(num_of_data, 3)),
+        'leg_model_input': np.zeros(shape=(num_of_data, 1)), 
+        'upper_arm_model_input': np.zeros(shape=(num_of_data, 6)), 
+        'lower_arm_model_input': np.zeros(shape=(num_of_data, 2)), 
+        'wrist_model_input': np.zeros(shape=(num_of_data, 6))
+    }
+    feature_data = pd.read_csv('./dREBA/data/M_test_2.csv', header=None)
 
+    data['neck_model_input'][:, :] = feature_data.iloc[:, 0:3].values.tolist()
+    data['trunk_model_input'][:, :] = feature_data.iloc[:, 3:6].values.tolist()
+    data['leg_model_input'][:, :] = np.reshape(feature_data.iloc[:, 6].values.tolist(), (num_of_data,1)).tolist()
+    data['upper_arm_model_input'][:, :] = feature_data.iloc[:, 7:13].values.tolist()
+    data['lower_arm_model_input'][:, :] = feature_data.iloc[:, 13:15].values.tolist()
+    data['wrist_model_input'][:, :] = feature_data.iloc[:, 15:21].values.tolist()
+
+    target_data = pd.read_csv('./dREBA/data/N_test_2.csv', header=None)
+
+
+    pred = super_model.predict(data)
+    pred = list(chain(*pred))
+    print(pred)
+    y_target = target_data.iloc[:,1].values.tolist()
+    abs_sum = 0
+
+    errors = np.absolute(np.subtract(y_target, pred))
+    f = open("./data/neuro_errors_2.csv", "w")
+    for i in range(num_of_data-1):
+        f.write(str(errors[i]))
+        f.write('\n')
+    f.write(str(errors[num_of_data-1]))
+    f.close()
+    abs_sum = np.sum(errors)
+
+    return(abs_sum/ num_of_data, abs_sum, num_of_data)
 
 
 
@@ -764,7 +806,7 @@ def super_model_test():
 
 
 np.random.seed(42)
-print(super_model_test())
+print(super_model_test_error())
 #generate_super_model_training_data()
 
 

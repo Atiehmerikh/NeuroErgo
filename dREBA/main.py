@@ -2,7 +2,8 @@ import numpy as np
 import sys, os
 sys.path.append(os.path.abspath(os.path.join('..')))
 from tqdm import tqdm
-
+from scipy.stats import truncnorm
+import csv
 
 import REBA.body_part_reba_calculator.Degree_to_REBA.neck_reba_score as REBA_neck
 import REBA.body_part_reba_calculator.Degree_to_REBA.trunk_reba_score as REBA_trunk
@@ -63,12 +64,14 @@ def dReba_coeff_generator(M,N,A):
     df_dw=[]
     a = []
     b =[]
-    row =[]
     for i in range(len(w)):
         df_dw.append(sym.diff(total_error, w[i]))
 
     for i in range(len(df_dw)):
+        row =[]
         for j in range(1,len(df_dw)+1):
+            if(len(df_dw[i].args) != 22):
+                raise Exception("a polynomial with some zero coefficients")
             elem = df_dw[i].args[j].args[0]
             row.append(elem)
         a.append(row)
@@ -76,8 +79,11 @@ def dReba_coeff_generator(M,N,A):
 
     print("before linear solving")
 
+    a = np.array(a, dtype='float')
+    b = np.array(b, dtype='float')
+
     dREBA_coeffs = np.linalg.solve(a, b)
-    print(dREBA_coeffs)
+    return dREBA_coeffs
 
 def dREBA_polynomial_matrix_generator():
     A = []
@@ -159,7 +165,7 @@ def train_dREBA(sample_size):
 
     samples = np.zeros(shape=(sample_size, 21))
     samples_REBA = np.zeros(shape=(sample_size,))
-    for i in range(sample_size):      
+    for i in tqdm(range(sample_size)):      
         a_sample = np.zeros(shape=(21,))
         for j, qs in enumerate(qss):
             a_sample[j] = random.sample(qs,1)[0]
@@ -171,9 +177,46 @@ def train_dREBA(sample_size):
     return dREBA_coeffs
 
 
+
+def generate_samples(sample_size):
+    random.seed(2)
+    qss = [[-60,0,20], [-54,0, 54], [-60,0, 60],\
+          [-30,0,20,60], [-40,0, 40], [-35,0, 35],\
+          [0,30,60],\
+          [-20,0,20,45], [-20, 0, 20, 45], [-2,0], [-2,0], [0, 30], [0, 30],\
+          [0, 60, 100], [0, 60, 100],\
+          [-53,-15,15], [-53,-15,15], [-40,0, 30], [-40,0, 30], [-90,0, 90], [-90,0, 90]]
+
+
+    samples = np.zeros(shape=(sample_size, 21))
+    samples_REBA = np.zeros(shape=(sample_size,))
+    for i in tqdm(range(sample_size)):      
+        a_sample = np.zeros(shape=(21,))
+        for j, qs in enumerate(qss):
+            minimum = min(qs)
+            maximum = max(qs)
+            mean_val = (minimum + maximum)/2
+            std_val = (maximum - minimum)/6
+            a, b = (min(qs) - mean_val) / std_val, (max(qs) - mean_val) / std_val
+            a_sample[j] = truncnorm.rvs(a, b, size = 1)[0]
+            #a_sample[j] = random.sample(list(range(min(qs), max(qs)+1)),1)[0]
+        samples[i,:] = a_sample
+        samples_REBA[i] = calc_total_reba(a_sample)
+    
+    with open('./data/M_test_2.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(samples)
+
+    print("M-test is wirtten.")
+
+    with open('./data/N_test_2.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(samples_REBA)
 if __name__ == '__main__':
-    dREBA_coeffs = train_dREBA(10000)
-    store_in_pickle("data/coeffs_10000.pkl",dREBA_coeffs)
+    generate_samples(1000000)
+    # dREBA_coeffs = train_dREBA(100000)
+    # print(dREBA_coeffs)
+    # store_in_pickle("data/coeffs_10000.pkl",dREBA_coeffs)
    # reading the input file(M,N)
 #    A = dREBA_polynomial_matrix_generator()
 
