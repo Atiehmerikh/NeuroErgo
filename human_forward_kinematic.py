@@ -113,7 +113,7 @@ class forward_kinematics:
         A_6 = np.matrix([[m.cos(theta_6),-m.sin(theta_6),0,0],[0,0,-1,0],[m.sin(theta_6),m.cos(theta_6),0,0],[0,0,0,1]])
         A_7 = np.matrix([[m.cos(theta_7),-m.sin(theta_7),0,0],[0,0,1,0],[-m.sin(theta_7),-m.cos(theta_7),0,0],[0,0,0,1]])
         T = np.matmul(np.matmul(np.matmul(np.matmul(np.matmul(np.matmul(A_1,A_2),A_3),A_4),A_5),A_6),A_7)
-        print(T)
+        #print(T)
         # position of ee relative to shoulder
         ee_position = T[:,3]
 

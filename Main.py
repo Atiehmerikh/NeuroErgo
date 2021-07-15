@@ -29,6 +29,7 @@ import os
 import time
 import pandas as pd
 from human_forward_kinematic import *
+import localsolver
 
 def retrieve_from_pickle(file_address):
     f = open(file_address, "rb")
@@ -758,6 +759,16 @@ def super_model_training_error():
     return(abs_sum/ num_of_data, abs_sum, num_of_data)
 
 
+def justify_reba_prediction(pred):
+    p = pred
+    if(p > 15):
+        p = 15
+    elif(p < 1):
+        p = 1
+    else:
+        p = round(p)
+    return p
+
 def super_model_test_error():
     
     super_model = load_model('./data/super_model_DNN.model')
@@ -771,7 +782,7 @@ def super_model_test_error():
         'lower_arm_model_input': np.zeros(shape=(num_of_data, 2)), 
         'wrist_model_input': np.zeros(shape=(num_of_data, 6))
     }
-    feature_data = pd.read_csv('./dREBA/data/M_test_2.csv', header=None)
+    feature_data = pd.read_csv('./dREBA/data/M_test.csv', header=None)
 
     data['neck_model_input'][:, :] = feature_data.iloc[:, 0:3].values.tolist()
     data['trunk_model_input'][:, :] = feature_data.iloc[:, 3:6].values.tolist()
@@ -780,22 +791,30 @@ def super_model_test_error():
     data['lower_arm_model_input'][:, :] = feature_data.iloc[:, 13:15].values.tolist()
     data['wrist_model_input'][:, :] = feature_data.iloc[:, 15:21].values.tolist()
 
-    target_data = pd.read_csv('./dREBA/data/N_test_2.csv', header=None)
+    target_data = pd.read_csv('./dREBA/data/N_test.csv', header=None)
 
 
     pred = super_model.predict(data)
     pred = list(chain(*pred))
-    print(pred)
+    for i in range(len(pred)):
+        pred[i] = justify_reba_prediction(pred[i])
+
+
     y_target = target_data.iloc[:,1].values.tolist()
     abs_sum = 0
 
     errors = np.absolute(np.subtract(y_target, pred))
-    f = open("./data/neuro_errors_2.csv", "w")
+    f = open("./data/neuro_errors_3.csv", "w")
+    f2 = open("./data/neuro_estimation.csv", "w")
     for i in range(num_of_data-1):
         f.write(str(errors[i]))
+        f2.write(str(pred[i]))
         f.write('\n')
+        f2.write('\n')
     f.write(str(errors[num_of_data-1]))
+    f2.write(str(pred[num_of_data-1]))
     f.close()
+    f2.close()
     abs_sum = np.sum(errors)
 
     return(abs_sum/ num_of_data, abs_sum, num_of_data)
@@ -805,7 +824,9 @@ def super_model_test_error():
 
 super_model_for_optimization = load_model('./data/super_model_DNN.model')
 
-def objective_function(angles):
+
+
+def objective_function(context):
     target = np.array([2,2,2])
     num_of_data = 1
     data = {
@@ -817,6 +838,11 @@ def objective_function(angles):
         'wrist_model_input': np.zeros(shape=(num_of_data, 6))
     }
 
+    angles=[]
+    for i in range(21):
+        #angles.append(context.get(i))
+        angles.append(context[i])
+
     data['neck_model_input'][:, :] = [angles[0:3]]
     data['trunk_model_input'][:, :] = [angles[3:6]]
     data['leg_model_input'][:, :] = [[angles[6]]]
@@ -826,6 +852,7 @@ def objective_function(angles):
 
     pred = super_model_for_optimization.predict(data)
     pred = list(chain(*pred))[0]
+    pred = justify_reba_prediction(pred)
 
     fk = forward_kinematics(angles)
     end_effector_position = fk.total_human_body_FK()
@@ -835,12 +862,41 @@ def objective_function(angles):
 
 
 
+
 if __name__ == "__main__": 
     print(objective_function([0] * 21))
+    qss = [[-60,0,20], [-54,0, 54], [-60,0, 60],\
+          [-30,0,20,60], [-40,0, 40], [-35,0, 35],\
+          [0,30,60],\
+          [-20,0,20,45], [-20, 0, 20, 45], [-2,0], [-2,0], [0, 30], [0, 30],\
+          [0, 60, 100], [0, 60, 100],\
+          [-53,-15,15], [-53,-15,15], [-40,0, 30], [-40,0, 30], [-90,0, 90], [-90,0, 90]]
+    with localsolver.LocalSolver() as ls:
+        model = ls.get_model()
+ 
+        for i, qs in enumerate(qss):
+            minimum = min(qs)
+            maximum = max(qs)
+            globals()['x%s' % i] = eval(f'model.float({minimum},{maximum})')
+        f = model.create_double_blackbox_function(objective_function)
+        call = model.call()
+        call.add_operand(f)
 
+        for i in range(len(qss)):
+            eval(f'call.add_operand(x{i})')
 
-#np.random.seed(42)
-#print(super_model_test_error())
+        model.minimize(call)
+        model.close()
+
+        ls.get_param().set_time_limit(50)
+        ls.solve()
+        sol = ls.get_solution()
+        for i in range(len(qss)):
+            eval('print("x{} = {}".format('+ str(i) + ',sol.get_value(x' + str(i) +')))')
+        print("obj = {}".format(sol.get_value(call)))
+
+    #np.random.seed(42)
+    #print(super_model_test_error())
 #generate_super_model_training_data()
 
 
