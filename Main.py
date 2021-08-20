@@ -122,7 +122,7 @@ def trunk_ranges():
     return trunk_flexion_extension_samples, trunk_side_flexion_samples, trunk_rotation_samples
 
 def trunk_learning_model():
-    activation = 'relu'
+    activation = 'softplus'
     model = Sequential()
     model.add(Dense(3, input_dim=3, activation=activation, name = "trunk_model"))
     model.add(Dense(3, activation=activation))
