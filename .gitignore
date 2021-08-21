@@ -23,6 +23,7 @@ wheels/
 pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
+dREBA/main.py
 .installed.cfg
 *.egg
 MANIFEST
