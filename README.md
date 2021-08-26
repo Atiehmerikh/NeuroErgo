@@ -86,6 +86,53 @@ Afterwards, running `./dREBA/matlab/optimizer_tobecontinued.m` will output test 
 Finally, to have test errors on the super model, you can run `./main.py` to get the results on `./data` folder with the names of `neuro_errors.csv` and `neuro_estimations.csv` that are the test error, and the approximated REBA score on the generated data, respectively.  
 
 
+## Optimization
+
+There is a chance for utilizing the learning models in a task optimization. The required forward kinematics for human body 
+has been implemented in `./human_forward_kinematic.py` and obejective function for this optimiztion task is minimizing the sum of risk (REBA score) for the human worker and forward kinematics of the human body and a target that can be the target position for an instrument in the factory floor. You can find this function in `./main.py`, dubbed `objective_function`.
+
+For the optimization, we can use the [`localsolver` library]([https://link](https://www.localsolver.com/)) which comprises a balck-box optimization. You can find the example in the following:
+
+```Python
+# first load the super model
+super_model = load_model('./data/super_model_DNN.model')
+
+# allowd body joint ranges (domain-oriented)
+qss = [[-60,30], [-54,54], [-60,60],\
+      [-30,60], [-40, 40], [-35, 35],\
+      [0,60],\
+      [-20,45], [-20, 0, 20, 45], [-2,0], [-2,0], [0, 30], [0, 30],\
+      [0,100], [0, 100],\
+      [-53,15], [-53,15], [-40, 30], [-40, 30], [-90, 90], [-90, 90]]
+
+with localsolver.LocalSolver() as ls:
+    model = ls.get_model()
+
+    for i, qs in enumerate(qss):
+        minimum = min(qs)
+        maximum = max(qs)
+        globals()['x%s' % i] = eval(f'model.float({minimum},{maximum})')
+    f = model.create_double_blackbox_function(objective_function)
+    call = model.call()
+    call.add_operand(f)
+
+    for i in range(len(qss)):
+        eval(f'call.add_operand(x{i})')
+
+    model.minimize(call)
+    model.close()
+
+    ls.get_param().set_time_limit(50)
+    ls.solve()
+    sol = ls.get_solution()
+    for i in range(len(qss)):
+        eval('print("x{} = {}".format('+ str(i) + ',sol.get_value(x' + str(i) +')))')
+
+    # the ouput of the solver is optimized body joint degrees that minimized risk,
+    # besides the distance of human forward kinematic and the target
+    print("obj = {}".format(sol.get_value(call)))
+```
+
 
 
 
