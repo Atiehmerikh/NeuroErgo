@@ -7,7 +7,23 @@ The proposed method is validated by comparing its results with "dREBA" method[1]
 ## Structure
 This is a neural network consists of 6 layer of local network (neck,trunk,leg,upper arms,lower arms, wrists) and finally with an aggregator network which returns the total REBA score based on joints degree of the local networks.
 ## Usage
-This method can be used for human robot ergonomic optimization.
+For using pre-trained models, you can loda the specified model under the data folder (in root folder). To load models, you can use the following command:
+
+```python
+from tensorflow.keras.models import load_model
+model = load_model('<address to the specified model>')
+```
+
+For example, from the `main.py` function, you can load `neck` local network (for predicting local neck REBA) by the following code snippet:
+
+```Python
+neck_model = load_model('./data/neck_DNN.model')
+```
+Or for loading the supper model (for predicting the total REBA score) use the the following code snippet:
+
+```Python
+supper_model = load_model('./data/supper_model_DNN.model')
+```
 
 ## OutPut
 
