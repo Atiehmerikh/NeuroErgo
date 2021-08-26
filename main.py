@@ -888,30 +888,3 @@ if __name__ == "__main__":
 
     #np.random.seed(42)
     #print(super_model_test_error())
-#generate_super_model_training_data()
-
-
-# for i in product([-60,0,20, 30], [-54,0, 54], [-60,0, 60],[-30,0,20,60, 70], [-40,0, 40], [-35,0, 35], [0,30,60,150]):
-#     print(i)
-#     break
-
-# def calc_stuff(x):
-#     return list(x)
-
-# pool = mp.Pool(4)
-# out1 = pool.map(calc_stuff, product([-60,0,20, 30], [-54,0, 54], [-60,0, 60],[-30,0,20,60, 70], [-40,0, 40], [-35,0, 35], [0,30,60,150]))
-# print(type(out1))
-# neck_training_model()
-# print(neck_model_test())
-# trunk_training_model()
-# print(trunk_model_test())
-# leg_training_model()
-# print(leg_model_test())
-# upper_arm_training_model()
-# print(upper_arm_model_test())
-# lower_arm_training_model()
-# print(lower_arm_model_test())
-# wrist_training_model()
-# print(wrist_model_test())
-# total_reba_from_partial_learning_model()
-# print(total_reba_from_partial_model_test())
