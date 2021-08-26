@@ -1,7 +1,7 @@
 function [ws] =diffrentiable_reba_coeff_calculator(M,N,A)
 %     M is a n to m matrix
-%     N is a n to 1 matrix
-%     A is a m to 3 matrix
+%     N is a n to 1 matrix, represents total REBA score for each row of M
+%     A is a m to 3 matrix, prepared by poly_coeff_calculator function
 %     n is number of postures
 %     m is number of body degrees
 
@@ -9,7 +9,7 @@ function [ws] =diffrentiable_reba_coeff_calculator(M,N,A)
     Q = M.^2 .* (A(:,1).') + M .* (A(:,2).') + (A(:,3).');
     disp('Q is computed')    
     
-    ep = (sum(Q .* w, 2) - N).^2;
+    ep = (sum(Q .* w, 2) - N).^
     disp('ep is calculated');
     
     df = arrayfun(@(x)(gradient(x, w) == 0), ep, 'UniformOutput', false);
