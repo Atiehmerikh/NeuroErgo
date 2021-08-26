@@ -772,7 +772,7 @@ def super_model_test_error():
         'lower_arm_model_input': np.zeros(shape=(num_of_data, 2)), 
         'wrist_model_input': np.zeros(shape=(num_of_data, 6))
     }
-    feature_data = pd.read_csv('./dREBA/data/input/M_test.csv', header=None)
+    feature_data = pd.read_csv('./dREBA/matlab/data/input/M_test.csv', header=None)
 
     data['neck_model_input'][:, :] = feature_data.iloc[:, 0:3].values.tolist()
     data['trunk_model_input'][:, :] = feature_data.iloc[:, 3:6].values.tolist()
@@ -781,7 +781,7 @@ def super_model_test_error():
     data['lower_arm_model_input'][:, :] = feature_data.iloc[:, 13:15].values.tolist()
     data['wrist_model_input'][:, :] = feature_data.iloc[:, 15:21].values.tolist()
 
-    target_data = pd.read_csv('./dREBA/data/input/N_test.csv', header=None)
+    target_data = pd.read_csv('./dREBA/matlab/data/input/N_test.csv', header=None)
 
 
     pred = super_model.predict(data)

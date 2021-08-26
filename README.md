@@ -28,7 +28,7 @@ first, we must call `generate_super_model_training_data()` by chunking data into
 Then, by reading them, train the super model. 
 
 Also, if you need to modfiy the topology or data ranges for each netwrok, you can find a function with the name format of `<body_part_name>_learning_model` and `<body_part_name>_learning_ranges`, respectively, in the `./main.py` file. 
-For the supper model, combining the networks is done by `create_super_model` function.
+For the super model, combining the networks is done by `create_super_model` function.
 
 ## Usage
 For using pre-trained models, you can loda the specified model under the data folder (in root folder). To load models, you can use the following command:
@@ -43,10 +43,10 @@ For example, from the `./main.py` function (under root folder), you can load `ne
 ```Python
 neck_model = load_model('./data/neck_DNN.model')
 ```
-Or for loading the supper model (for predicting the total REBA score) use the the following code snippet:
+Or for loading the super model (for predicting the total REBA score) use the the following code snippet:
 
 ```Python
-supper_model = load_model('./data/supper_model_DNN.model')
+super_model = load_model('./data/super_model_DNN.model')
 ```
 
 After loading the model, you can do the approximation by the following call, for example the super model prediction:
@@ -72,16 +72,25 @@ pred = super_model.predict(data)
 pred = list(chain(*pred)) # list of two REBA scores for two input body joints 
 ```
 
+## Comparison
+For comparing the reuslts with the dREBA, we need to implemeent the method first. 
+As the dREBA method is analytical, we have implemented it with MATLAB. 
+You can find the corresponding files in `./dREBA/matlab/` folder. 
+For training and testing, we need to generate data. 
+For this matter, you can run `./dREBA/main.py`. 
+This run generates required data for training and testing in `./dREBA/matlab/data/input/` folder, called `M.csv` and `N.csv` for training, and 
+`M_test.csv` and `N_test.csv`, respectively. `M` files are the sampls of body joints in each row, and `N` files are the REBA scores for each sample in the row of `M` files.
+
+Afterwards, running `./dREBA/matlab/optimizer_tobecontinued.m` will output test results on the random generated data in `./dREBA/matlab/dat/output/` folder. 
+
+Finally, to have test errors on the super model, you can run `./main.py` to get the results on `./data` folder with the names of `neuro_errors.csv` and `neuro_estimations.csv` that are the test error, and the approximated REBA score on the generated data, respectively.  
 
 
-## OutPut
 
-## Documentation
+
 
 ## References
 <a id="1">[1]</a> 
 Busch, Baptiste and Maeda, Guilherme and Mollard, Yoan and Demangeat, Marie and Lopes, Manuel (2017). 
 Postural optimization for an ergonomic human-robot interaction. 
 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS),
-
-## TODO
