@@ -88,29 +88,24 @@ def generate_samples(sample_size):
         samples[i,:] = a_sample
         samples_REBA[i] = calc_total_reba(a_sample)
     
-    with open('./data/M_test_2.csv', 'w') as f:
-        writer = csv.writer(f)
-        writer.writerows(samples)
 
-    print("M-test is wirtten.")
+    return samples, samples_REBA
 
-    with open('./data/N_test_2.csv', 'w') as f:
-        writer = csv.writer(f)
-        writer.writerow(samples_REBA)
 if __name__ == '__main__':
-    generate_samples(1000000)
-    # dREBA_coeffs = train_dREBA(100000)
-    # print(dREBA_coeffs)
-    # store_in_pickle("data/coeffs_10000.pkl",dREBA_coeffs)
-   # reading the input file(M,N)
-#    A = dREBA_polynomial_matrix_generator()
+    
+    joint_samples_train, reba_scores_train = generate_samples(21)
+    with open('./dREBA_matlab/data/input/M.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(joint_samples_train)
+    with open('./dREBA_matlab/data/input/N.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(reba_scores_train)
 
-#    dREBA_coeffs = dReba_coeff_generator(M,N,A)
 
-#    each_posture_error=[]
-#    n = len(N)
-#    for i in range(n):
-#        m_dREBA = DREBA.Dreba_error_each_posture()
-#        each_posture_error.append(m_dREBA.dReba_error(A,M[i,:],N[i],dREBA_coeffs))
-
-#     print(each_posture_error)
+    joint_samples_test, reba_scores_test = generate_samples(1000000)
+    with open('./dREBA_matlab/data/input/M_test.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(joint_samples_test)
+    with open('./dREBA_matlab/data/input/N_test.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(reba_scores_test)
