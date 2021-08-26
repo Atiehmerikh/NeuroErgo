@@ -45,10 +45,6 @@ class Dataset:
 
         return sample_degrees
 
-    # def REBA_of_samples(self, samples_array):
-    #
-    #     return REBA_score
-
     def store_data(self, samples_array, REBA):
         data = {'neck_flexion': [samples_array[0]],
                 'neck_side_flexion': [samples_array[1]],

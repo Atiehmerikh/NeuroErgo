@@ -11,8 +11,7 @@ import _pickle as cPickle
 
 import multiprocessing as mp
 from itertools import product, chain
-#from sklearn.model_selection import train_test_split
-#import tensorflow
+
 from tensorflow.keras.layers import Dense, Dropout, Concatenate, concatenate
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.optimizers import Adam, RMSprop, Nadam, Adamax, Adadelta, Adagrad, SGD
@@ -21,6 +20,7 @@ from tensorflow.keras.regularizers import l1, l2
 from tensorflow.keras import initializers
 from tensorflow.keras.layers import Activation
 from tensorflow.keras import backend as K
+
 from tqdm import tqdm
 import math
 import gzip
@@ -28,8 +28,10 @@ import shutil
 import os
 import time
 import pandas as pd
-from human_forward_kinematic import *
-import localsolver
+
+# libraries for blackbox optimization
+# from human_forward_kinematic import *  
+# import localsolver 
 
 def retrieve_from_pickle(file_address):
     f = open(file_address, "rb")
