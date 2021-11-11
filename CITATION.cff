@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Merikh Nejadasl"
+  given-names: "Atieh"
+  orcid: "https://orcid.org/0000-0001-6703-5046"
+- family-names: "Gheibi"
+  given-names: "Omid"
+  orcid: "https://orcid.org/0000-0003-3265-4095"
+title: "NeuroErgo"
+version:
+doi: 
+date-released: 2021-08-30
+url: "https://github.com/VUB-RMM/NeuroREBA"
