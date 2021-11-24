@@ -89,7 +89,7 @@ Finally, to have test errors on the super model, you can run `./main.py` to get 
 ## Optimization
 
 There is a chance for utilizing the learning models in a task optimization. The required forward kinematics for human body 
-has been implemented in `./human_forward_kinematic.py` and obejective function for this optimiztion task is minimizing the sum of risk (REBA score) for the human worker and forward kinematics of the human body and a target that can be the target position for an instrument in the factory floor. You can find this function in `./main.py`, dubbed `objective_function`.
+has been implemented in `./human_forward_kinematic.py` and obejective function for this optimiztion task that returns the sum of gradients of the risk (REBA score given by NeuroErgo) for the human worker, and forward kinematics of the human body and a target that can be the target position for an instrument in the factory floor. You can find this function in `./main.py`, dubbed `objective_function`.
 
 For the optimization, we can use the [`localsolver` library](https://www.localsolver.com/) which comprises a balck-box optimization. You can find the example in the following:
 
