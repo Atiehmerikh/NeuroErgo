@@ -9,7 +9,7 @@ function [ws] =diffrentiable_reba_coeff_calculator(M,N,A)
     Q = M.^2 .* (A(:,1).') + M .* (A(:,2).') + (A(:,3).');
     disp('Q is computed')    
     
-    ep = (sum(Q .* w, 2) - N).^
+    ep = (sum(Q .* w, 2) - N).^2;
     disp('ep is calculated');
     
     df = arrayfun(@(x)(gradient(x, w) == 0), ep, 'UniformOutput', false);
@@ -20,9 +20,10 @@ function [ws] =diffrentiable_reba_coeff_calculator(M,N,A)
 
     sol = solve(df, w);
     disp('df is solved');
+    disp(sol)
     
     ws = zeros(1,size(M,2));
     for i = 1:21
-        ws(i) = eval(strcat('double(sol.w', num2str(i), ');'));
+        ws(i) = eval(strcat('double(sol.w', num2str(i), ');'))
     end
     

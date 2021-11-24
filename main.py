@@ -31,6 +31,8 @@ import time
 import pandas as pd
 from functools import partial
 
+from tqdm import tqdm
+
 # libraries for blackbox optimization
 from human_forward_kinematic import *  
 import localsolver 
@@ -816,210 +818,107 @@ def super_model_test_error():
 
 
 # for black-box optmization 
-def objective_function(context, initial_joint):
+def objective_function(context, initial_joint, task_w, posture_w):
     initial = initial_joint
-    num_of_data = 1
-    data = {
-        'neck_model_input': np.zeros(shape=(num_of_data, 3)),
-        'trunk_model_input': np.zeros(shape=(num_of_data, 3)),
-        'leg_model_input': np.zeros(shape=(num_of_data, 1)), 
-        'upper_arm_model_input': np.zeros(shape=(num_of_data, 6)), 
-        'lower_arm_model_input': np.zeros(shape=(num_of_data, 2)), 
-        'wrist_model_input': np.zeros(shape=(num_of_data, 6))
-    }
-
     angles=[]
     for i in range(21):
         #angles.append(context.get(i))
         angles.append(context[i])
+    num_of_data = 1
+    data = {
+        'neck_model_input': tf.Variable([angles[0:3]], dtype=tf.float32),
+        'trunk_model_input': tf.Variable([angles[3:6]], dtype=tf.float32),
+        'leg_model_input': tf.Variable([[angles[6]]], dtype=tf.float32),
+        'upper_arm_model_input': tf.Variable([angles[7:13]], dtype=tf.float32),
+        'lower_arm_model_input': tf.Variable([angles[13:15]], dtype=tf.float32),
+        'wrist_model_input': tf.Variable([angles[15:21]], dtype=tf.float32)
+    }
+    
+    with tf.GradientTape() as tape:
+        pred = super_model_for_optimization(data)
+    grad = tape.gradient(pred, data)
+    
+    c_posuture_derivitive = list(np.array(grad['neck_model_input'])[0]) + list(np.array(grad['trunk_model_input'])[0]) + list(np.array(grad['leg_model_input'])[0]) +\
+               list(np.array(grad['upper_arm_model_input'])[0]) + list(np.array(grad['lower_arm_model_input'])[0]) + list(np.array(grad['wrist_model_input'])[0])
 
-    data['neck_model_input'][:, :] = [angles[0:3]]
-    data['trunk_model_input'][:, :] = [angles[3:6]]
-    data['leg_model_input'][:, :] = [[angles[6]]]
-    data['upper_arm_model_input'][:, :] = [angles[7:13]]
-    data['lower_arm_model_input'][:, :] = [angles[13:15]]
-    data['wrist_model_input'][:, :] = [angles[15:21]]
-
-    pred = super_model_for_optimization.predict(data)
-    pred = list(chain(*pred))[0]
-    pred = justify_reba_prediction(pred)
-
-    fk = forward_kinematics(angles)
-    end_effector_position = fk.total_human_body_FK()
-    dist = np.linalg.norm([initial[i] - context[i] for i in range(len(initial))])
-    return 0.25 * pred + 0.75 * dist
+    # fk = forward_kinematics(angles)
+    # end_effector_position = fk.total_human_body_FK()
+    c_task_derivitive = [2*(context[i] - initial[i])  for i in range(len(initial))]
+    gradient_norm = np.linalg.norm([(posture_w * c_posuture_derivitive[i] + task_w * c_task_derivitive[i]) for i in range(len(initial))])
+    return gradient_norm
 
 
 def real_data_provider():
-    joints = [
-        [-2.521828455, 13.86098367, 0.0,
-         26.74368395, 5.343683243, 0.0, 
-         max(88.56745626,	96.6036250487339),	41.92672174, 9.598638383,	
-         73.62039271, 62.54834548, 0.0, 
-         0.0, 55.66712169, 59.06936301, 
-         24.35608804, -12.04060774,-1.719131321,	
-         10.02046955, -1.719131321,	10.02046955],
-        [26.48733624, 22.14641858, 0.0,
-         15.90242956, 1.008251178, 0.0,		
-         max(16.66457137, 126.5839527),	58.80180918, 70.12312593,
-         100.7194402, 94.01398722, 17.39755071,
-         29.40632989, 47.15635696, 29.07315401,
-         6.783288906, 0.0, -2.579181052,
-         -0.05729578906, -2.579181052, -0.05729578906],
-        [29.20921193, 31.87697653, 0.0,
-         -1.08868532, 0.5246335074,	0.0,
-         max(79.68848194, 102.4155273),	38.00100076, 33.59184473,
-         71.51840573, 79.39716419, 21.34605395,
-         15.18876822, 37.1554291, 94.87602487,
-         24.49464847, 0.0, -1.833778,
-         0.05729578906, -1.833778, 0.05729578906],
-        [-3.497213697, 23.97266054, 0.0,
-         19.99877181, 36.02931359, 0.0,		
-         max(60.19828072, 96.20003713),	49.90925975, 18.73754177,
-         54.83030708, 5.731967965, 28.29426008,
-         0.0, 15.84580755, 24.49464847,	
-         16.4635952, -52.3952303, 8.916796253,	
-         27.66184465, 8.916796253, -37.66184465],
-        [0.8594689248, 14.74802917,	0.0,
-         -19.99877181, 4.02526877,	0.0,
-         max(10.5798441, 11.18676388), 48.54741689,	28.1154286,
-         76.70292825, 41.6688274, 29.57306994,	
-         28.75173915, 99.09082809, 16.8632196,	
-         -52.34466073,	9.598638383, 7.816449009, 
-         2.980724879, 7.816449009,	2.980724879],
-        [11.82949905, 13.34000882, 0.0,	
-         -5.336218588,	0.5667250047, 0.0,
-         max(84.66378141, 100.2532871),	43.6972753,	46.44899776,
-         69.51268489, 79.0472158, 28.29426008,
-         11.5954424, 31.78833062, 67.16988933,	
-         12.57811866, 8.506146953, 2.980724879,
-         -8.568979552, 2.980724879,	-8.568979552],
-        [13.59162277, 38.21833344,	0.0,
-         43.15701348, 30.74733817,	0.0,
-         max(111.7773031, 107.5176753),	55.18001173, 23.9358894,
-         58.33175675, 70.60978761,	3.497213697,	
-         29.39775711, 44.02801981,	61.37988921,
-         -42.18332997,	15.6345989,	-8.047846247,
-         -10.83608944,	-8.047846247,	-10.83608944],
-        [29.69256357, 48.0752575, 0.0,	
-         -14.41834524, 4.45809523, 0.0,
-         max(144.7856001, 95.45131981),	19.60981069, 69.63496512,
-         15.20360409, 39.91474948, 29.88639405,
-         9.671555142, 2.562558733, 97.29626797,
-         8.506146953, 41.32292462, -4.991042573,
-         -15.01073396, -4.991042573, -15.01073396],
-        [5.451319812, 28.53904924,	0.0,	
-         6.776690914, 7.908910471,	0.0,
-         max(137.7314156, 137.4764848),	67.97568716, 69.57383715,
-         86.44538186, 92.00576193,	14.0046121,	
-         9.55533142, 43.44790027, 41.06193147,
-         38.71544899, -11.47834095,	-4.588565736,
-         -10.48627587,	-4.588565736,	-10.48627587],
-        [-57.03467226,	53.95608175, 0.0,	
-         35.59133528, 4.86590026, 0.0,
-         max(73.08216595, 47.5458498), 65.03907961, 17.82423582, 
-         63.64062321, 76.82064807, 12.94408154, 
-         14.18183373, 27.37700618, 85.06646877, 
-         -6.783288906, 35.11491567, 6.776690914, 
-         10.42801239, 6.776690914, 10.42801239],
-        [-14.77358515, 14.32367983,	0.0,
-         -18.24011776, 2.288359392,	0.0,
-         max(5.126400082, 13.34447671),	29.1908472,	45.81319361,
-         16.8632196, 47.77838594, 29.68755299,	
-         29.84386808, 21.56518502, 9.598638383,
-         31.57012867, 18.37748066,	-6.430619681,
-         2.349785605, -6.430619681,	2.349785605],
-        [-3.726853142, 20.51640523,	0.0,
-         8.800821189, 7.970146712, 0.0,
-         max(85.23897314, 95.33621859),	59.80132232, 44.43869463,
-         90.1718876, 93.72685314, 3.095477741,
-         7.065272931, 52.62710189,	100.2532871,	
-         14.30364872, 0.0, 4.76102686,
-         0.2291837292,	4.76102686,	0.2291837292]
-    ]
-    return joints
+    joints_set = [51.5360792322674,50.7433097956106,0,
+                  -3.26763048572082,0.332623327271285,0,
+                  140.805032574017,31.7883306170516,23.3645749994502,
+                  -73.8591253414813,74.9892660368735,13.238204725126,
+                  17.4576031237221,48.2409115317895,75.1078730717884,
+                  19.4383706628683,7.69281245155988,-17.8183364120746,
+                  1.14599199838859,-17.8183364120746,1.14599199838859]
+    
+    return joints_set
     
 
 
 
 if __name__ == "__main__": 
-
-    #super_model_test_error()
     
-    # tf.compat.v1.disable_eager_execution()
-    # super_model = load_model('./data/super_model_DNN.model')
-
-    # first = K.gradients(neck_model.outputs, neck_model.inputs)
-    # first = K.gradients(first, super_model.inputs)
-    # print(first)
-    ###    A balck-box optimization method ###
     super_model_for_optimization = load_model('./data/super_model_DNN.model')
     joints = real_data_provider()
-    # print(objective_function([0] * 21))
-    # qss = [[-60,0,20], [-54,0, 54], [-60,0, 60],\
-    #       [-30,0,20,60], [-40,0, 40], [-35,0, 35],\
-    #       [0,30,60],\
-    #       [-20,0,20,45], [-20, 0, 20, 45], [-2,0], [-2,0], [0, 30], [0, 30],\
-    #       [0, 60, 100], [0, 60, 100],\
-    #       [-53,-15,15], [-53,-15,15], [-40,0, 30], [-40,0, 30], [-90,0, 90], [-90,0, 90]]
     qss = [[-60,30], [-54, 54], [-60,0, 60],\
           [-30, 70], [-40, 40], [-35, 35],\
           [0, 150],\
           [-47,170], [-47, 170], [-2,200], [-2,200], [0, 30], [0, 30],\
           [0, 150], [0, 150],\
           [-53,47], [-53,47], [-40, 30], [-40, 30], [-90, 90], [-90, 90]]
+
     
-    all_solutions = []
-    for joint in joints:
-        with localsolver.LocalSolver() as ls:
-            model = ls.get_model()
+    ###    A balck-box optimization method ###
+    postures_ws = [0.25]
     
-            for i, qs in enumerate(qss):
-                minimum = qs[0]
-                maximum = qs[-1]
-                globals()['x%s' % i] = eval(f'model.float({minimum},{maximum})')
-            
-            obj_func_instance = partial(objective_function, initial_joint = joint)
-            f = model.create_double_blackbox_function(obj_func_instance)
-            call = model.call()
-            call.add_operand(f)
-
-            for i in range(len(qss)):
-                eval(f'call.add_operand(x{i})')
-
-            model.minimize(call)
-            model.close()
-
-            ls.get_param().set_time_limit(100)
-            ls.solve()
-            sol = ls.get_solution()
-            
-            solution = []
-            for i in range(len(qss)):
-                solution.append(eval('sol.get_value(x' + str(i) +')'))
-            all_solutions.append(solution)
-            for i in range(len(qss)):
-                eval('print("x{} = {}".format('+ str(i) + ',sol.get_value(x' + str(i) +')))')
-            print("obj = {}".format(sol.get_value(call)))
-
-    for solution in all_solutions:
-        print(calc_total_reba(solution[0:7], solution[7:]))
+    for pw in postures_ws:
+        print("------------------------pw:" + str(pw))
+        all_solutions = []
+        # print(np.array(joints).shape)
+        for joint in tqdm(joints):
+            with localsolver.LocalSolver() as ls:
+                model = ls.get_model()
         
-        
-    #np.random.seed(42)
-    #print(super_model_test_error())
+                for i, qs in enumerate(qss):
+                    minimum = qs[0]
+                    maximum = qs[-1]
+                    globals()['x%s' % i] = eval(f'model.float({minimum},{maximum})')
+                
+                obj_func_instance = partial(objective_function, initial_joint = joint, task_w = 1-pw, posture_w = pw)
+                f = model.create_double_blackbox_function(obj_func_instance)
+                call = model.call()
+                call.add_operand(f)
 
-#    0.5-0.5   0.25-0.75     0.95-0.05
-# 6	  [8]         [8]          [8]
-# 5	  [9]         [8]          [8]
-# 4	  [3]         [3]          [4]
-# 6	  [8]         [8]         [10]
-# 6	  [6]         [5]          [5]
-# 3	  [8]         [5]          [4]
-# 6	  [9]         [8]          [9]
-# 6	  [8]         [9]          [9]
-# 6	  [8]         [8]          [8]
-# 9	  [9]         [10]         [9]
-# 6	  [8]         [5]          [4]
-# 4   [8]         [8]          [9]
+                for i in range(len(qss)):
+                    eval(f'call.add_operand(x{i})')
+
+                model.minimize(call)
+                model.close()
+
+                ls.get_param().set_time_limit(50)
+                ls.get_param().set_nb_threads(8)
+                ls.get_param().set_verbosity(0)
+                ls.solve()
+                sol = ls.get_solution()
+                
+                solution = []
+                for i in range(len(qss)):
+                    solution.append(eval('sol.get_value(x' + str(i) +')'))
+                all_solutions.append(solution)
+                for i in range(len(qss)):
+                    eval('print("x{} = {}".format('+ str(i) + ',sol.get_value(x' + str(i) +')))')
+                print("obj = {}".format(sol.get_value(call)))
+
+    #     with open("./data/solutions_" + str(pw) + ".txt", "w") as solution_file:
+    #         for solution in all_solutions:
+    #             r = calc_total_reba(solution[0:7], solution[7:])[0]
+    #             solution_file.write(str(r))
+    #             solution_file.write('\n')
+        
 

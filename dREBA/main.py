@@ -13,8 +13,8 @@ import REBA.body_part_reba_calculator.Degree_to_REBA.lowerarm_reba_score as REBA
 import REBA.body_part_reba_calculator.Degree_to_REBA.wrist_reba_score as REBA_wrist
 import REBA.body_part_reba_calculator.partial_REBA_to_total_REBA as REBA
 
-import polynomial_coeff_calculator as pCoeff
-import Dreba_coeff_calculator as DREBA
+# import polynomial_coeff_calculator as pCoeff
+# import Dreba_coeff_calculator as DREBA
 import sympy as sym
 import random
 import _pickle as cPickle
@@ -65,12 +65,12 @@ def train_dREBA(sample_size):
 
 def generate_samples(sample_size):
     random.seed(2)
-    qss = [[-60,0,20], [-54,0, 54], [-60,0, 60],\
-          [-30,0,20,60], [-40,0, 40], [-35,0, 35],\
-          [0,30,60],\
-          [-20,0,20,45], [-20, 0, 20, 45], [-2,0], [-2,0], [0, 30], [0, 30],\
-          [0, 60, 100], [0, 60, 100],\
-          [-53,-15,15], [-53,-15,15], [-40,0, 30], [-40,0, 30], [-90,0, 90], [-90,0, 90]]
+    qss = [[-60,30], [-54, 54], [-60,0, 60],\
+          [-30, 70], [-40, 40], [-35, 35],\
+          [0, 150],\
+          [-47,170], [-47, 170], [-2,200], [-2,200], [0, 30], [0, 30],\
+          [0, 150], [0, 150],\
+          [-53,47], [-53,47], [-40, 30], [-40, 30], [-90, 90], [-90, 90]]
 
 
     samples = np.zeros(shape=(sample_size, 21))
@@ -78,8 +78,8 @@ def generate_samples(sample_size):
     for i in tqdm(range(sample_size)):      
         a_sample = np.zeros(shape=(21,))
         for j, qs in enumerate(qss):
-            minimum = min(qs)
-            maximum = max(qs)
+            minimum = qs[0]
+            maximum = qs[1]
             mean_val = (minimum + maximum)/2
             std_val = (maximum - minimum)/6
             a, b = (min(qs) - mean_val) / std_val, (max(qs) - mean_val) / std_val
@@ -94,18 +94,18 @@ def generate_samples(sample_size):
 if __name__ == '__main__':
     
     joint_samples_train, reba_scores_train = generate_samples(21)
-    with open('./dREBA_matlab/data/input/M.csv', 'w') as f:
+    with open('./matlab/data/input/M.csv', 'w') as f:
         writer = csv.writer(f)
         writer.writerows(joint_samples_train)
-    with open('./dREBA_matlab/data/input/N.csv', 'w') as f:
+    with open('./matlab/data/input/N.csv', 'w') as f:
         writer = csv.writer(f)
-        writer.writerows(reba_scores_train)
+        writer.writerows([reba_scores_train])
 
 
-    joint_samples_test, reba_scores_test = generate_samples(1000000)
-    with open('./dREBA_matlab/data/input/M_test.csv', 'w') as f:
-        writer = csv.writer(f)
-        writer.writerows(joint_samples_test)
-    with open('./dREBA_matlab/data/input/N_test.csv', 'w') as f:
-        writer = csv.writer(f)
-        writer.writerows(reba_scores_test)
+    # joint_samples_test, reba_scores_test = generate_samples(1000000)
+    # with open('./dREBA_matlab/data/input/M_test.csv', 'w') as f:
+    #     writer = csv.writer(f)
+    #     writer.writerows(joint_samples_test)
+    # with open('./dREBA_matlab/data/input/N_test.csv', 'w') as f:
+    #     writer = csv.writer(f)
+    #     writer.writerows(reba_scores_test)
