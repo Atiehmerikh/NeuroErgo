@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package>
+  <name>panda_description</name>
+  <version>0.0.0</version>
+  <description>The panda_description package</description>
+
+  <maintainer email="kelly.merckaert@vub.be">Kelly Merckaert</maintainer>
+
+  <license>BSD</license>
+
+  <!-- <url type="repository">http://wiki.ros.org/panda_description</url> -->
+
+  <!-- <author email="kelly.merckaert@vub.be">Kelly Merckaert</author> -->
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>joint_state_publisher</run_depend>
+  <run_depend>robot_state_publisher</run_depend>
+  <run_depend>rviz</run_depend>
+
+  <export>
+  </export>
+</package>

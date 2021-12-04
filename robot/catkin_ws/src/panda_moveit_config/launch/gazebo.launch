@@ -1,0 +1,32 @@
+<launch>
+  <rosparam command="load" file="$(find panda_moveit_config)/config/joint_names.yaml"/>
+  <include file="$(find panda_moveit_config)/launch/planning_context.launch" >
+    <arg name="load_robot_description" value="true" />
+  </include>
+
+  <arg name="urdf_path" default="$(find panda_description)/urdf/panda_arm_hand.urdf"/>
+  <arg name="paused" default="false"/>
+  <node name="joint_state_publisher" pkg="joint_state_publisher"     type="joint_state_publisher">
+    <param name="/use_gui" value="false"/>
+    <rosparam param="/source_list">[/panda/joint_states]</rosparam>
+  </node>
+
+  <!-- send robot urdf to param server -->
+  <param name="panda_description" textfile="$(arg urdf_path)" />
+
+    <!-- Launch Gazebo -->
+   <include file="$(find panda_gazebo)/launch/panda_world.launch" />
+    <include file="$(find panda_control)/launch/panda_trajectorycontrol.launch" />
+    <include file="$(dirname)/ros_controllers.launch"/>
+
+    <include file="$(find panda_moveit_config)/launch/move_group.launch">
+    <arg name="publish_monitored_planning_scene" value="true" />
+    </include>
+
+  <include file="$(find panda_moveit_config)/launch/moveit_rviz.launch">
+    
+  </include>
+
+
+
+</launch>

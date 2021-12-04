@@ -1,0 +1,10 @@
+<launch>
+
+   <node pkg="panda_motion_planning" name="joint_planning" type="joint_planning.py" output="screen">
+        <param name="frame_id" value="base_link" />
+  </node>
+   <node pkg="panda_motion_planning" name="get_data" type="get_data.py" output="screen">
+        <param name="frame_id" value="base_link" />
+  </node>
+
+</launch>

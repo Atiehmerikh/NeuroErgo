@@ -1,0 +1,7 @@
+<launch>
+
+   <node pkg="panda_motion_planning" name="planning_script" type="planning_script.py" output="screen">
+        <param name="frame_id" value="base_link" />
+  </node>
+
+</launch>

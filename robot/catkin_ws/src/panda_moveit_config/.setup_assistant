@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: panda_description
+    relative_path: urdf/panda_arm_hand.urdf
+    xacro_args: ""
+  SRDF:
+    relative_path: config/panda.srdf
+  CONFIG:
+    author_name: Atieh merikh
+    author_email: at.merikh@gmail.com
+    generated_timestamp: 1634971020
