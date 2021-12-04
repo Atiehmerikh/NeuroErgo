@@ -20,6 +20,7 @@ from tensorflow.keras.regularizers import l1, l2
 from tensorflow.keras import initializers
 from tensorflow.keras.layers import Activation
 from tensorflow.keras import backend as K
+import tensorflow as tf
 
 from tqdm import tqdm
 import math
@@ -28,10 +29,13 @@ import shutil
 import os
 import time
 import pandas as pd
+from functools import partial
+
+from tqdm import tqdm
 
 # libraries for blackbox optimization
-# from human_forward_kinematic import *  
-# import localsolver 
+from human_forward_kinematic import *  
+import localsolver 
 
 def retrieve_from_pickle(file_address):
     f = open(file_address, "rb")
@@ -814,79 +818,107 @@ def super_model_test_error():
 
 
 # for black-box optmization 
-def objective_function(context):
-    target = np.array([2,2,2])
-    num_of_data = 1
-    data = {
-        'neck_model_input': np.zeros(shape=(num_of_data, 3)),
-        'trunk_model_input': np.zeros(shape=(num_of_data, 3)),
-        'leg_model_input': np.zeros(shape=(num_of_data, 1)), 
-        'upper_arm_model_input': np.zeros(shape=(num_of_data, 6)), 
-        'lower_arm_model_input': np.zeros(shape=(num_of_data, 2)), 
-        'wrist_model_input': np.zeros(shape=(num_of_data, 6))
-    }
-
+def objective_function(context, initial_joint, task_w, posture_w):
+    initial = initial_joint
     angles=[]
     for i in range(21):
         #angles.append(context.get(i))
         angles.append(context[i])
+    num_of_data = 1
+    data = {
+        'neck_model_input': tf.Variable([angles[0:3]], dtype=tf.float32),
+        'trunk_model_input': tf.Variable([angles[3:6]], dtype=tf.float32),
+        'leg_model_input': tf.Variable([[angles[6]]], dtype=tf.float32),
+        'upper_arm_model_input': tf.Variable([angles[7:13]], dtype=tf.float32),
+        'lower_arm_model_input': tf.Variable([angles[13:15]], dtype=tf.float32),
+        'wrist_model_input': tf.Variable([angles[15:21]], dtype=tf.float32)
+    }
+    
+    with tf.GradientTape() as tape:
+        pred = super_model_for_optimization(data)
+    grad = tape.gradient(pred, data)
+    
+    c_posuture_derivitive = list(np.array(grad['neck_model_input'])[0]) + list(np.array(grad['trunk_model_input'])[0]) + list(np.array(grad['leg_model_input'])[0]) +\
+               list(np.array(grad['upper_arm_model_input'])[0]) + list(np.array(grad['lower_arm_model_input'])[0]) + list(np.array(grad['wrist_model_input'])[0])
 
-    data['neck_model_input'][:, :] = [angles[0:3]]
-    data['trunk_model_input'][:, :] = [angles[3:6]]
-    data['leg_model_input'][:, :] = [[angles[6]]]
-    data['upper_arm_model_input'][:, :] = [angles[7:13]]
-    data['lower_arm_model_input'][:, :] = [angles[13:15]]
-    data['wrist_model_input'][:, :] = [angles[15:21]]
-
-    pred = super_model_for_optimization.predict(data)
-    pred = list(chain(*pred))[0]
-    pred = justify_reba_prediction(pred)
-
-    fk = forward_kinematics(angles)
-    end_effector_position = fk.total_human_body_FK()
-    dist = np.linalg.norm(np.array(end_effector_position) - target)
-    return pred + dist
+    # fk = forward_kinematics(angles)
+    # end_effector_position = fk.total_human_body_FK()
+    c_task_derivitive = [2*(context[i] - initial[i])  for i in range(len(initial))]
+    gradient_norm = np.linalg.norm([(posture_w * c_posuture_derivitive[i] + task_w * c_task_derivitive[i]) for i in range(len(initial))])
+    return gradient_norm
 
 
+def real_data_provider():
+    joints_set = [51.5360792322674,50.7433097956106,0,
+                  -3.26763048572082,0.332623327271285,0,
+                  140.805032574017,31.7883306170516,23.3645749994502,
+                  -73.8591253414813,74.9892660368735,13.238204725126,
+                  17.4576031237221,48.2409115317895,75.1078730717884,
+                  19.4383706628683,7.69281245155988,-17.8183364120746,
+                  1.14599199838859,-17.8183364120746,1.14599199838859]
+    
+    return joints_set
+    
 
 
 
 if __name__ == "__main__": 
+    
+    super_model_for_optimization = load_model('./data/super_model_DNN.model')
+    joints = real_data_provider()
+    qss = [[-60,30], [-54, 54], [-60,0, 60],\
+          [-30, 70], [-40, 40], [-35, 35],\
+          [0, 150],\
+          [-47,170], [-47, 170], [-2,200], [-2,200], [0, 30], [0, 30],\
+          [0, 150], [0, 150],\
+          [-53,47], [-53,47], [-40, 30], [-40, 30], [-90, 90], [-90, 90]]
 
-    super_model_test_error()
-
+    
     ###    A balck-box optimization method ###
-    #super_model_for_optimization = load_model('./data/super_model_DNN.model')
-    # print(objective_function([0] * 21))
-    # qss = [[-60,0,20], [-54,0, 54], [-60,0, 60],\
-    #       [-30,0,20,60], [-40,0, 40], [-35,0, 35],\
-    #       [0,30,60],\
-    #       [-20,0,20,45], [-20, 0, 20, 45], [-2,0], [-2,0], [0, 30], [0, 30],\
-    #       [0, 60, 100], [0, 60, 100],\
-    #       [-53,-15,15], [-53,-15,15], [-40,0, 30], [-40,0, 30], [-90,0, 90], [-90,0, 90]]
-    # with localsolver.LocalSolver() as ls:
-    #     model = ls.get_model()
- 
-    #     for i, qs in enumerate(qss):
-    #         minimum = min(qs)
-    #         maximum = max(qs)
-    #         globals()['x%s' % i] = eval(f'model.float({minimum},{maximum})')
-    #     f = model.create_double_blackbox_function(objective_function)
-    #     call = model.call()
-    #     call.add_operand(f)
+    postures_ws = [0.25]
+    
+    for pw in postures_ws:
+        print("------------------------pw:" + str(pw))
+        all_solutions = []
+        # print(np.array(joints).shape)
+        for joint in tqdm(joints):
+            with localsolver.LocalSolver() as ls:
+                model = ls.get_model()
+        
+                for i, qs in enumerate(qss):
+                    minimum = qs[0]
+                    maximum = qs[-1]
+                    globals()['x%s' % i] = eval(f'model.float({minimum},{maximum})')
+                
+                obj_func_instance = partial(objective_function, initial_joint = joint, task_w = 1-pw, posture_w = pw)
+                f = model.create_double_blackbox_function(obj_func_instance)
+                call = model.call()
+                call.add_operand(f)
 
-    #     for i in range(len(qss)):
-    #         eval(f'call.add_operand(x{i})')
+                for i in range(len(qss)):
+                    eval(f'call.add_operand(x{i})')
 
-    #     model.minimize(call)
-    #     model.close()
+                model.minimize(call)
+                model.close()
 
-    #     ls.get_param().set_time_limit(50)
-    #     ls.solve()
-    #     sol = ls.get_solution()
-    #     for i in range(len(qss)):
-    #         eval('print("x{} = {}".format('+ str(i) + ',sol.get_value(x' + str(i) +')))')
-    #     print("obj = {}".format(sol.get_value(call)))
+                ls.get_param().set_time_limit(50)
+                ls.get_param().set_nb_threads(8)
+                ls.get_param().set_verbosity(0)
+                ls.solve()
+                sol = ls.get_solution()
+                
+                solution = []
+                for i in range(len(qss)):
+                    solution.append(eval('sol.get_value(x' + str(i) +')'))
+                all_solutions.append(solution)
+                for i in range(len(qss)):
+                    eval('print("x{} = {}".format('+ str(i) + ',sol.get_value(x' + str(i) +')))')
+                print("obj = {}".format(sol.get_value(call)))
 
-    #np.random.seed(42)
-    #print(super_model_test_error())
+    #     with open("./data/solutions_" + str(pw) + ".txt", "w") as solution_file:
+    #         for solution in all_solutions:
+    #             r = calc_total_reba(solution[0:7], solution[7:])[0]
+    #             solution_file.write(str(r))
+    #             solution_file.write('\n')
+        
+
