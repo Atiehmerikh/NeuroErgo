@@ -34,6 +34,10 @@ Based on this part of the experimentation, the set of selected hyper-paramters a
 
 ![image](https://user-images.githubusercontent.com/22638310/154095534-017588c5-5f93-4249-ac6b-f6d546955e1b.png)
 
+
+Note that the dropout rate is being included as a regularization term for hindering a well-known phenomenon in machine learning called overfitting [[2]](#2).
+However, the rate 0.0 has been selected for all networks in our experiment, based on the grid searching optimization.
+
 ## Usage
 For using pre-trained models, you can loda the specified model under the data folder (in root folder). To load models, you can use the following command:
 
@@ -145,3 +149,7 @@ with localsolver.LocalSolver() as ls:
 Busch, Baptiste and Maeda, Guilherme and Mollard, Yoan and Demangeat, Marie and Lopes, Manuel (2017). 
 Postural optimization for an ergonomic human-robot interaction. 
 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS),
+
+<a id="2">[2]</a> 
+Goodfellow, I., Bengio, Y. and Courville, A., 2016. Deep learning. MIT press.
+
