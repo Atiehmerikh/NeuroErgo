@@ -30,6 +30,10 @@ Then, by reading them, train the super model.
 Also, if you need to modfiy the topology or data ranges for each netwrok, you can find a function with the name format of `<body_part_name>_learning_model` and `<body_part_name>_learning_ranges`, respectively, in the `./main.py` file. 
 For the super model, combining the networks is done by `create_super_model` function.
 
+Based on this part of the experimentation, the set of selected hyper-paramters are represented in the following table:
+
+![image](https://user-images.githubusercontent.com/22638310/154095534-017588c5-5f93-4249-ac6b-f6d546955e1b.png)
+
 ## Usage
 For using pre-trained models, you can loda the specified model under the data folder (in root folder). To load models, you can use the following command:
 
